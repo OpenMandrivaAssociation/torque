@@ -1,6 +1,6 @@
 %define name    torque
 %define version 2.1.7
-%define release %mkrel 1
+%define release %mkrel 2
 %define lib_name_orig lib%{name}
 %define major           1
 #%define lib_name %mklibname %name %{major}
@@ -8,7 +8,7 @@
 
 Name:           %{name}
 Summary:        The Portable Batch System
-Group:		Cluster/Queueing Services
+Group:		System/Cluster
 Version:        %{version}
 Release:        %{release}
 License:        PBS
@@ -70,7 +70,7 @@ Provides:	%name-devel = %version-%release
 %package	client
 Summary:	The Portable Batch System (PBS) client
 Requires:       openssh-clients >= 2.9
-Group:		Cluster/Queueing Services
+Group:		System/Cluster
 Provides:	OpenPBS-client
 Obsoletes:	OpenPBS-client
 Requires(post): rpm-helper
