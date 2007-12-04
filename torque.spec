@@ -52,7 +52,7 @@ Patch13:    torque-mkdir-destdir.patch
 BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
-BuildRequires:	XFree86-devel
+BuildRequires:	X11-devel
 Provides:	OpenPBS
 Obsoletes:	OpenPBS
 Requires(post): rpm-helper
