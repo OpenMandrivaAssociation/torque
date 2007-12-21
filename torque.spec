@@ -15,6 +15,7 @@ License:        PBS
 URL:            http://www.openpbs.org
 Requires:       openssh-clients >= 2.9
 Provides:       OpenPBS
+BuildRoot:      %{_tmppath}/%{name}-%{version}
 Prefix:         %{_prefix}
 Source:         %{name}-%{version}.tar.bz2
 Source1:	pbs_server
