@@ -284,7 +284,9 @@ ln -sf %{_libdir}/xpbsmon /usr/lib/xpbsmon
 %preun client
 %_preun_service pbs_mom
 
+%if %mdkversion < 200900
 %postun -p /sbin/ldconfig
+%endif
 
 %files
 %defattr(-,root,root)
