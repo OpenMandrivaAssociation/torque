@@ -1,6 +1,6 @@
 %define name    torque
 %define version 2.1.7
-%define release %mkrel 3
+%define release %mkrel 5
 %define lib_name_orig lib%{name}
 %define major           1
 #%define lib_name %mklibname %name %{major}
