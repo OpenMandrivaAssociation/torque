@@ -3,8 +3,10 @@
 %define release %mkrel 6
 %define lib_name_orig lib%{name}
 %define major           1
-#%define lib_name %mklibname %name %{major}
+#define lib_name %mklibname %name %{major}
 %define lib_name %mklibname %name%{major}
+
+%define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
 
 Name:           %{name}
 Summary:        The Portable Batch System
@@ -48,7 +50,8 @@ Patch9:		openpbs-pbs_log.patch
 Patch10:	openpbs-ia64-2.patch
 Patch11:	pbs_mlockall-2.3.16.patch
 Patch12:	torque-1.0.1p6-comment.diff
-Patch13:    torque-mkdir-destdir.patch
+Patch13:	torque-mkdir-destdir.patch
+Patch14:	torque-2.1.7-tcl86.patch
 BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
@@ -116,7 +119,6 @@ Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS
 software support,products, and information."
 
 %prep
-
 %setup -q -n %name-%version
 #%patch1 -p0
 #%patch2 -p0
@@ -130,6 +132,12 @@ software support,products, and information."
 #%patch10 -p0
 #%patch11 -p1
 %patch13 -p0 -b .destdir
+%patch14 -p1 -b .tcl86
+
+# these variables aren't ever set in any file that gets installed,
+# so without doing this, xpbs won't run - AdamW 2008/12
+sed -i -e 's,$xpbs_datadump,xpbs_datadump,g' src/gui/pbs.tcl
+sed -i -e 's,$xpbs_scriptload,xpbs_scriptload,g' src/gui/pbs.tcl
 
 %ifarch x86_64 ppc64 sparc64
 for i in configure.in configure; 
@@ -153,10 +161,10 @@ cp %{SOURCE15} $RPM_BUILD_DIR/%{name}-%{version}/para_job_pbs.sh
 /usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
 
 %build
-pbs_server_home=/var/spool/pbs
 ./configure \
 	--prefix=%_prefix \
 	--with-scp \
+	--with-server-home=/var/spool/pbs \
 	--enable-docs \
 	--enable-server \
 	--enable-mom \
@@ -164,7 +172,7 @@ pbs_server_home=/var/spool/pbs
 	--libdir=%{_libdir} \
 	--srcdir=${RPM_BUILD_DIR}/%{name}-%{version} \
 	--enable-gui \
-    --mandir=%_mandir \
+	--mandir=%_mandir \
 	-x-libraries=%_libdir
 	
 %ifarch x86_64
@@ -173,10 +181,11 @@ pbs_server_home=/var/spool/pbs
 
 #make depend
 make clean
-%make all
+%make all XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
 
 %install
-pbs_server_home_for_install=%buildroot/var/spool/pbs
+rm -rf %{buildroot}
+pbs_server_home_for_install=%{buildroot}/var/spool/pbs
 
 mkdir -p %{buildroot}%{_initrddir}
 mkdir -p ${pbs_server_home_for_install}/mom_priv/
@@ -190,8 +199,8 @@ mkdir -p ${pbs_server_home_for_install}/server_priv
 mkdir -p %{buildroot}%{_defaultdocdir}
 mkdir -p %{buildroot}%{_sysconfdir}
 mkdir -p %{buildroot}%{_sbindir}
-mkdir -p %{buildroot}%{_libdir}/xpbs
-mkdir -p %{buildroot}%{_libdir}/xpbsmon
+mkdir -p %{buildroot}%{tcl_sitelib}/xpbs
+mkdir -p %{buildroot}%{tcl_sitelib}/xpbsmon
 mkdir -p %{buildroot}%{_libdir}/%{name}-%{version}
 mkdir -p %{buildroot}%{_defaultdocdir}/%{name}-%{version}
 mkdir -p %{buildroot}%{_defaultdocdir}/%{name}-client-%{version}
@@ -204,7 +213,7 @@ install -m755 %{SOURCE12} %{buildroot}%{_initrddir}/openpbs
 install -m644 %{SOURCE2} %{buildroot}%{_sysconfdir}/pbs.conf
 install -m644 %{SOURCE11} %{buildroot}%{_sbindir}/pbslogs
 
-%makeinstall_std PBS_SERVER_HOME=/var/spool/pbs mandir=%_mandir
+%makeinstall_std PBS_SERVER_HOME=/var/spool/pbs mandir=%_mandir XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
 
 mkdir -p %{buildroot}%{_sbindir}
 chmod 755 %{buildroot}%{_sbindir}/pbs_mom
@@ -219,11 +228,24 @@ install -m755 %{SOURCE6} %{buildroot}%{_bindir}/xpbs
 install -m755 %{SOURCE7} %{buildroot}%{_bindir}/xpbsmon
 install -m755 %{SOURCE13} %{buildroot}%{_bindir}/setup_pbs_server
 install -m755 %{SOURCE19} %{buildroot}%{_bindir}/setup_pbs_client
-install -m644 %{SOURCE8} %{buildroot}%{_libdir}/xpbsmon/tclIndex
-install -m644 %{SOURCE9} %{buildroot}%{_libdir}/xpbs/tclIndex
+install -m644 %{SOURCE8} %{buildroot}%{tcl_sitelib}/xpbsmon/tclIndex
+install -m644 %{SOURCE9} %{buildroot}%{tcl_sitelib}/xpbs/tclIndex
 install -m644 %{SOURCE14} %{buildroot}%{_var}/spool/pbs/pbs_config.sample
 install -m755 %{SOURCE17} %{buildroot}%{_var}/spool/pbs/mom_priv/epilogue
 install -m755 %{SOURCE18} %{buildroot}%{_var}/spool/pbs/mom_priv/prologue
+
+# replace the placeholder text with whatever the real tcl_sitelib
+# should be...cunning, eh? - AdamW 2008/12
+sed -i -e 's,TCL_SITELIB,%{tcl_sitelib},g' \
+%{buildroot}%{tcl_sitelib}/xpbsmon/tclIndex \
+%{buildroot}%{tcl_sitelib}/xpbs/tclIndex \
+%{buildroot}%{_bindir}/xpbs \
+%{buildroot}%{_bindir}/xpbsmon \
+%{buildroot}%{_bindir}/setup_pbs_server \
+%{buildroot}%{_bindir}/setup_pbs_client
+
+rm -f %{buildroot}%{_libdir}/xpbs/tclIndex
+rm -f %{buildroot}%{_libdir}/xpbsmon/tclIndex
 
 echo "# MOM server configuration file" > ${pbs_server_home_for_install}/mom_priv/config
 echo "# if more than one value, separate it by comma." >> ${pbs_server_home_for_install}/mom_priv/config
@@ -275,8 +297,8 @@ fi
 %_post_service pbs_mom
 
 %post xpbs
-ln -sf %{_libdir}/xpbs /usr/lib/xpbs
-ln -sf %{_libdir}/xpbsmon /usr/lib/xpbsmon
+ln -sf %{tcl_sitelib}/xpbs /usr/lib/xpbs
+ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 
 %preun
 %_preun_service pbs_server
@@ -373,27 +395,27 @@ ln -sf %{_libdir}/xpbsmon /usr/lib/xpbsmon
 %attr(755,root,root) %{_bindir}/pbs_wish
 %attr(755,root,root) %{_bindir}/xpbsmon
 %attr(755,root,root) %{_bindir}/xpbs
-%dir %{_libdir}/xpbs/bitmaps
-%attr(644,root,root) %{_libdir}/xpbs/bitmaps/*
-%dir %{_libdir}/xpbs/help
-%attr(644,root,root) %{_libdir}/xpbs/help/*
-%dir %{_libdir}/xpbs/bin
-%attr(755,root,root) %{_libdir}/xpbs/bin/*
-%attr(644,root,root) %{_libdir}/xpbs/preferences.tcl
-%attr(644,root,root) %{_libdir}/xpbs/pbs.tcl
-%attr(644,root,root) %{_libdir}/xpbs/*.tk
-%attr(644,root,root) %{_libdir}/xpbs/tclIndex
-%attr(644,root,root) %config(noreplace) %{_libdir}/xpbs/xpbsrc
-%attr(644,root,root) %{_libdir}/xpbs/buildindex
-%attr(644,root,root) %{_libdir}/xpbsmon/buildindex
-%attr(644,root,root) %{_libdir}/xpbsmon/*.tk
-%attr(644,root,root) %{_libdir}/xpbsmon/*.tcl
-%attr(644,root,root) %{_libdir}/xpbsmon/tclIndex
-%attr(644,root,root) %config(noreplace) %{_libdir}/xpbsmon/xpbsmonrc
-%dir %{_libdir}/xpbsmon
-%dir %{_libdir}/xpbsmon/bitmaps
-%attr(644,root,root) %{_libdir}/xpbsmon/bitmaps/*
-%attr(644,root,root) %{_libdir}/xpbsmon/help/*
+%dir %{tcl_sitelib}/xpbs/bitmaps
+%attr(644,root,root) %{tcl_sitelib}/xpbs/bitmaps/*
+%dir %{tcl_sitelib}/xpbs/help
+%attr(644,root,root) %{tcl_sitelib}/xpbs/help/*
+%dir %{tcl_sitelib}/xpbs/bin
+%attr(755,root,root) %{tcl_sitelib}/xpbs/bin/*
+%attr(644,root,root) %{tcl_sitelib}/xpbs/preferences.tcl
+%attr(644,root,root) %{tcl_sitelib}/xpbs/pbs.tcl
+%attr(644,root,root) %{tcl_sitelib}/xpbs/*.tk
+%attr(644,root,root) %{tcl_sitelib}/xpbs/tclIndex
+%attr(644,root,root) %config(noreplace) %{tcl_sitelib}/xpbs/xpbsrc
+%attr(644,root,root) %{tcl_sitelib}/xpbs/buildindex
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/buildindex
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/*.tk
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/*.tcl
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/tclIndex
+%attr(644,root,root) %config(noreplace) %{tcl_sitelib}/xpbsmon/xpbsmonrc
+%dir %{tcl_sitelib}/xpbsmon
+%dir %{tcl_sitelib}/xpbsmon/bitmaps
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/bitmaps/*
+%attr(644,root,root) %{tcl_sitelib}/xpbsmon/help/*
 %attr(644,root,root) %{_mandir}/man1/x*
 
 
