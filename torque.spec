@@ -44,7 +44,7 @@ Patch14:	torque-2.1.11-tcl86.patch
 BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
-BuildRequires:	X11-devel
+BuildRequires:	X11-devel readline-devel
 Provides:	OpenPBS
 Obsoletes:	OpenPBS
 Requires(post): rpm-helper
