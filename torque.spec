@@ -1,6 +1,6 @@
 %define name    torque
-%define version 2.1.7
-%define release %mkrel 6
+%define version 2.1.11
+%define release %mkrel 1
 %define lib_name_orig lib%{name}
 %define major           1
 #define lib_name %mklibname %name %{major}
@@ -13,13 +13,12 @@ Summary:        The Portable Batch System
 Group:		System/Cluster
 Version:        %{version}
 Release:        %{release}
-License:        PBS
-URL:            http://www.openpbs.org
+License:        OpenPBS
+URL:            http://www.clusterresources.com/products/torque-resource-manager.php
 Requires:       openssh-clients >= 2.9
 Provides:       OpenPBS
 BuildRoot:      %{_tmppath}/%{name}-%{version}
-Prefix:         %{_prefix}
-Source:         %{name}-%{version}.tar.bz2
+Source0:        %{name}-%{version}.tar.gz
 Source1:	pbs_server
 Source2:	pbs.conf	
 Source3:	PBS_doc_v2.3_admin.pdf
@@ -38,20 +37,10 @@ Source15:	pbs_para_job.sh
 Source17:	pbs-epilogue
 Source18:	pbs-prologue
 Source19:	setup_pbs_client
-Patch1:		OpenPBS.exclude_scripts.patch	
-Patch2:		openpbs-makedepend-sh.patch
-Patch3:		openpbs-Libpbs-makefile.in.patch
-Patch4:		openpbs-tail.mk.in.patch
-Patch5: 	openpbs-resmon-makefile.in.patch
-Patch6:		openpbs-tools-makefile.in.patch
-Patch7:		pbs-cmds.makefile.in.pach
-Patch8:		openpbs-svr_connect.patch
-Patch9:		openpbs-pbs_log.patch
-Patch10:	openpbs-ia64-2.patch
-Patch11:	pbs_mlockall-2.3.16.patch
-Patch12:	torque-1.0.1p6-comment.diff
-Patch13:	torque-mkdir-destdir.patch
-Patch14:	torque-2.1.7-tcl86.patch
+Patch0:		torque-2.1.11-string-format.patch
+Patch9:		torque-2.1.11-pbs_log.patch
+Patch13:	torque-2.1.11-destdir.patch
+Patch14:	torque-2.1.11-tcl86.patch
 BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
@@ -120,19 +109,10 @@ software support,products, and information."
 
 %prep
 %setup -q -n %name-%version
-#%patch1 -p0
-#%patch2 -p0
-#%patch3 -p0
-#%patch4 -p0
-#%patch5 -p0
-#%patch6 -p0
-#%patch7 -p0
-#%patch8 -p0
-%patch9 -p0
-#%patch10 -p0
-#%patch11 -p1
-%patch13 -p0 -b .destdir
-%patch14 -p1 -b .tcl86
+%patch0 -p1 -b .string_format~
+%patch9 -p1 -b .pbs_log~
+%patch13 -p1 -b .destdir~
+%patch14 -p1 -b .tcl86~
 
 # these variables aren't ever set in any file that gets installed,
 # so without doing this, xpbs won't run - AdamW 2008/12
@@ -161,18 +141,15 @@ cp %{SOURCE15} $RPM_BUILD_DIR/%{name}-%{version}/para_job_pbs.sh
 /usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
 
 %build
-./configure \
-	--prefix=%_prefix \
+%configure2_5x \
 	--with-scp \
 	--with-server-home=/var/spool/pbs \
 	--enable-docs \
 	--enable-server \
 	--enable-mom \
 	--enable-client \
-	--libdir=%{_libdir} \
 	--srcdir=${RPM_BUILD_DIR}/%{name}-%{version} \
 	--enable-gui \
-	--mandir=%_mandir \
 	-x-libraries=%_libdir
 	
 %ifarch x86_64
