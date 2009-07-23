@@ -1,10 +1,10 @@
 %define name    torque
-%define version 2.1.11
+%define version 2.3.7
 %define release %mkrel 1
 %define lib_name_orig lib%{name}
-%define major           1
-#define lib_name %mklibname %name %{major}
-%define lib_name %mklibname %name%{major}
+%define major           2
+%define	libname	%mklibname %{name} %{major}
+%define	devname	%mklibname -d %{name}
 
 %define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
 
@@ -37,10 +37,8 @@ Source15:	pbs_para_job.sh
 Source17:	pbs-epilogue
 Source18:	pbs-prologue
 Source19:	setup_pbs_client
-Patch0:		torque-2.1.11-string-format.patch
-Patch9:		torque-2.1.11-pbs_log.patch
 Patch13:	torque-2.1.11-destdir.patch
-Patch14:	torque-2.1.11-tcl86.patch
+Patch14:	torque-2.3.7-tcl86.patch
 BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
@@ -49,30 +47,6 @@ Provides:	OpenPBS
 Obsoletes:	OpenPBS
 Requires(post): rpm-helper
 Requires(preun): rpm-helper
-
-%package	-n %{lib_name}-devel
-Summary:	The Portable Batch System (PBS) devel 
-Group:		Development/Other
-Provides:	libOpenPBS0-devel
-Obsoletes:	libOpenPBS0-devel
-Provides:	lib%name-devel = %version-%release
-Provides:	%name-devel = %version-%release
-
-%package	client
-Summary:	The Portable Batch System (PBS) client
-Requires:       openssh-clients >= 2.9
-Group:		System/Cluster
-Provides:	OpenPBS-client
-Obsoletes:	OpenPBS-client
-Requires(post): rpm-helper
-Requires(preun): rpm-helper
-
-%package        xpbs
-Requires:	tk >= 8.3, tcl >= 8.3, %{name}-client = %{version}-%{release}
-Summary:        The Portable Batch System (PBS) X interface 
-Group:          Monitoring
-Provides:	OpenPBS-xpbs
-Obsoletes:	OpenPBS-xpbs
 
 %description
 The Portable Batch System (PBS) is a flexible batch software
@@ -86,21 +60,53 @@ Center, Lawrence Livermore National Laboratory, and Veridian
 Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
 software support,products, and information."
 
-%description client
-The Portable Batch System (PBS) client.
-"This product includes software developed by NASA Ames Research 
-Center, Lawrence Livermore National Laboratory, and Veridian 
-Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
-software support,products, and information."
+%package -n	%{libname}
+Summary:	Library for %{name}
+Group:		System/Libraries
 
-%description -n %{lib_name}-devel
+%description -n	%{libname}
+Library for %{name}.
+
+%package -n	%{devname}
+Summary:	The Portable Batch System (PBS) devel 
+Group:		Development/Other
+Requires:	%{libname} = %{version}
+Provides:	%{_lib}%{name}1-devel = %{version}-%{release}
+Obsoletes:	%{_lib}%{name}1-devel
+Provides:	lib%name-devel = %version-%release
+Provides:	%name-devel = %version-%release
+
+%description -n %{devname}
 The Portable Batch System (PBS) function prototype.
 "This product includes software developed by NASA Ames Research 
 Center, Lawrence Livermore National Laboratory, and Veridian 
 Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
 software support,products, and information."
 
-%description xpbs
+%package	client
+Summary:	The Portable Batch System (PBS) client
+Requires:       openssh-clients >= 2.9
+Group:		System/Cluster
+Provides:	OpenPBS-client
+Obsoletes:	OpenPBS-client
+Requires(post): rpm-helper
+Requires(preun): rpm-helper
+
+%description	client
+The Portable Batch System (PBS) client.
+"This product includes software developed by NASA Ames Research 
+Center, Lawrence Livermore National Laboratory, and Veridian 
+Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
+software support,products, and information."
+
+%package        xpbs
+Requires:	tk >= 8.3, tcl >= 8.3, %{name}-client = %{version}-%{release}
+Summary:        The Portable Batch System (PBS) X interface 
+Group:          Monitoring
+Provides:	OpenPBS-xpbs
+Obsoletes:	OpenPBS-xpbs
+
+%description	xpbs
 The Portable Batch System (PBS) X interface.
 "This product includes software developed by NASA Ames Research 
 Center, Lawrence Livermore National Laboratory, and Veridian 
@@ -108,9 +114,7 @@ Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS
 software support,products, and information."
 
 %prep
-%setup -q -n %name-%version
-%patch0 -p1 -b .string_format~
-%patch9 -p1 -b .pbs_log~
+%setup -q
 %patch13 -p1 -b .destdir~
 %patch14 -p1 -b .tcl86~
 
@@ -118,16 +122,6 @@ software support,products, and information."
 # so without doing this, xpbs won't run - AdamW 2008/12
 sed -i -e 's,$xpbs_datadump,xpbs_datadump,g' src/gui/pbs.tcl
 sed -i -e 's,$xpbs_scriptload,xpbs_scriptload,g' src/gui/pbs.tcl
-
-%ifarch x86_64 ppc64 sparc64
-for i in configure.in configure; 
-	do 
-	perl -pi -e 's|\$\{ac_libpath\}/lib/|\$\{ac_libpath\}/lib64/|g' $i
-	perl -pi -e 's|\$\{tcl_dir\}/lib/|\$\{tcl_dir\}/lib64/|g' $i
-	perl -pi -e 's|\$TCL_DIR/lib/|\$TCL_DIR/lib64/|g' $i
-	perl -pi -e 's|\$TCLX_DIR/lib/|\$TCLX_DIR/lib64/|g' $i
-	done
-%endif
 
 cp %{SOURCE3} $RPM_BUILD_DIR/%{name}-%{version}/PBS_doc_v2.3_admin.pdf
 cp %{SOURCE10} $RPM_BUILD_DIR/%{name}-%{version}/introduction_openPBS
@@ -141,8 +135,9 @@ cp %{SOURCE15} $RPM_BUILD_DIR/%{name}-%{version}/para_job_pbs.sh
 /usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
 
 %build
+CFLAGS="%{optflags} -std=gnu99" \
 %configure2_5x \
-	--with-scp \
+	--with-rcp=scp \
 	--with-server-home=/var/spool/pbs \
 	--enable-docs \
 	--enable-server \
@@ -290,109 +285,119 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %files
 %defattr(-,root,root)
 %doc doc/READ_ME PBS_License.txt 
-%attr(755,root,root) %{_initrddir}/pbs_server
-%attr(755,root,root) %{_initrddir}/pbs_sched
-%attr(755,root,root) %{_initrddir}/openpbs
-%attr(644,root,root) %{_mandir}/man1/pbs*
-%attr(644,root,root) %{_mandir}/man3/pbs*
-%attr(644,root,root) %{_mandir}/man7/*
-%attr(644,root,root) %{_mandir}/man8/pbsnodes*
-%attr(644,root,root) %{_mandir}/man8/pbs_server.8*
-%attr(644,root,root) %{_mandir}/man8/pbs_sch*
-%attr(644,root,root) %config(noreplace) %{_sysconfdir}/pbs.conf
-%attr(755,root,root) %{_sbindir}/pbs_server
-%attr(755,root,root) %{_sbindir}/pbs_sched
-%attr(755,root,root) %{_sbindir}/pbslogs
-%attr(755,root,root) %{_bindir}/pbsnodes
-%attr(755,root,root) %{_bindir}/setup_pbs_server
-%attr(755,root,root) %{_bindir}/pbs-config
-%attr(755,root,root) %{_bindir}/printtracking
-%attr(755,root,root) %{_var}/spool/pbs/sched_logs/
+%{_mandir}/man1/pbs*
+%{_mandir}/man3/pbs*
+%{_mandir}/man7/*
+%{_mandir}/man8/pbsnodes*
+%{_mandir}/man8/pbs_server.8*
+%{_mandir}/man8/pbs_sch*
+%config(noreplace) %{_sysconfdir}/pbs.conf
+%defattr(755, root, root)
+%{_initrddir}/pbs_server
+%{_initrddir}/pbs_sched
+%{_initrddir}/openpbs
+%{_sbindir}/pbs_server
+%{_sbindir}/pbs_sched
+%{_sbindir}/pbslogs
+%{_sbindir}/qnoded
+%{_sbindir}/qschedd
+%{_sbindir}/qserverd
+%{_bindir}/pbs_track
+%{_bindir}/pbsnodes
+%{_bindir}/setup_pbs_server
+%{_bindir}/pbs-config
+%{_bindir}/printtracking
+%{_bindir}/printserverdb
+
+%{_var}/spool/pbs/sched_logs/
 %dir %{_var}/spool/pbs
 %{_var}/spool/pbs/sched_priv
-%attr(755,root,root) %{_var}/spool/pbs/server_logs/
-%attr(755,root,root) %{_var}/spool/pbs/checkpoint/
-%attr(755,root,root) %{_var}/spool/pbs/server_priv/
+%{_var}/spool/pbs/server_logs/
+%{_var}/spool/pbs/checkpoint/
+%{_var}/spool/pbs/server_priv/
 %attr(775,root,pbs) %{_var}/spool/pbs/spool/
 %attr(1777,root,pbs) %{_var}/spool/pbs/undelivered/
-%attr(644,root,root) %config(noreplace) %{_var}/spool/pbs/pbs_environment
-%attr(644,root,root) %config(noreplace) %{_var}/spool/pbs/server_name
-%attr(644,root,root) %{_var}/spool/pbs/pbs_config.sample
+%config(noreplace) %{_var}/spool/pbs/pbs_environment
+%config(noreplace) %{_var}/spool/pbs/server_name
+%{_var}/spool/pbs/pbs_config.sample
 
 %files client
 %defattr(-,root,root)
 %doc PBS_doc_v2.3_admin.pdf introduction_openPBS para_job_pbs.sh PBS_License.txt
-%attr(755,root,root) %{_sbindir}/momctl
-%attr(644,root,root) %config(noreplace) %{_sysconfdir}/pbs.conf
-%attr(755,root,root) %{_var}/spool/pbs/aux
-%attr(644,root,root) %{_mandir}/man1/q*
-%attr(644,root,root) %{_mandir}/man8/q*
-%attr(644,root,root) %{_mandir}/man8/pbsnodes*
-%attr(644,root,root) %{_mandir}/man8/pbs_mom.8*
-%attr(644,root,root) %{_mandir}/man1/bas*
-%attr(644,root,root) %{_mandir}/man1/nqs*
+%config(noreplace) %{_sysconfdir}/pbs.conf
+%{_mandir}/man1/q*
+%{_mandir}/man8/q*
+%{_mandir}/man8/pbsnodes*
+%{_mandir}/man8/pbs_mom.8*
+%{_mandir}/man1/bas*
+%{_mandir}/man1/nqs*
 %dir %{_var}/spool/pbs
 %{_var}/spool/pbs/mom_logs
 %{_var}/spool/pbs/mom_priv
-%attr(755,root,root) %{_var}/spool/pbs/checkpoint
+%{_var}/spool/pbs/aux
+%{_var}/spool/pbs/checkpoint
 %attr(1777,root,pbs) %{_var}/spool/pbs/undelivered
 %attr(775,root,pbs) %{_var}/spool/pbs/spool
-%attr(644,root,root) %config(noreplace) %{_var}/spool/pbs/pbs_environment
-%attr(755,root,root) %{_bindir}/q*
-%attr(755,root,root) %{_bindir}/chk_tree
-%attr(755,root,root) %{_bindir}/hostn
-%attr(755,root,root) %{_bindir}/nqs2pbs
-%attr(755,root,root) %{_bindir}/printjob
-%attr(755,root,root) %{_bindir}/tracejob
-%attr(755,root,root) %{_bindir}/pbsnodes
-%attr(755,root,root) %{_bindir}/pbsdsh
-%attr(755,root,root) %{_bindir}/setup_pbs_client
-%attr(755,root,root) %{_sbindir}/pbs_demux
+%config(noreplace) %{_var}/spool/pbs/pbs_environment
+%{_bindir}/q*
+%{_bindir}/chk_tree
+%{_bindir}/hostn
+%{_bindir}/nqs2pbs
+%{_bindir}/printjob
+%{_bindir}/tracejob
+%{_bindir}/pbsnodes
+%{_bindir}/pbsdsh
+%{_bindir}/setup_pbs_client
+%{_sbindir}/momctl
+%{_sbindir}/pbs_demux
 %attr(4755,root,root) %{_sbindir}/pbs_iff
-%attr(755,root,root) %{_sbindir}/pbs_mom
-%attr(755,root,root) %{_initrddir}/pbs_mom
-%attr(644,root,root) %config(noreplace) %{_var}/spool/pbs/server_name
+%{_sbindir}/pbs_mom
+%{_initrddir}/pbs_mom
+%config(noreplace) %{_var}/spool/pbs/server_name
 
-%files -n %{lib_name}-devel
+%files -n %{libname}
+%{_libdir}/*.so.%{major}*
+
+%files -n %{devname}
 %defattr(-,root,root)
 %doc PBS_License.txt
 %{_libdir}/*.la
-%{_libdir}/*.so*
+%{_libdir}/*.so
 %{_libdir}/*.a
-%attr(644,root,root) %{_mandir}/man3/tm*
-%attr(644,root,root) %{_mandir}/man3/rpp.3.*
-%attr(755,root,root) %{_includedir}/%{name}-%{version}
-%attr(644,root,root) %{_includedir}/*.h
+%{_mandir}/man3/tm*
+%{_mandir}/man3/rpp.3.*
+%{_includedir}/%{name}-%{version}
+%{_includedir}/*.h
 %multiarch %{multiarch_includedir}/%{name}-%{version}/pbs_config.h
 
 %files xpbs
 %defattr(-,root,root)
 %doc PBS_License.txt
-%attr(755,root,root) %{_bindir}/pbs_tclsh
-%attr(755,root,root) %{_bindir}/pbs_wish
-%attr(755,root,root) %{_bindir}/xpbsmon
-%attr(755,root,root) %{_bindir}/xpbs
+%{_bindir}/pbs_tclsh
+%{_bindir}/pbs_wish
+%{_bindir}/xpbsmon
+%{_bindir}/xpbs
 %dir %{tcl_sitelib}/xpbs/bitmaps
-%attr(644,root,root) %{tcl_sitelib}/xpbs/bitmaps/*
+%{tcl_sitelib}/xpbs/bitmaps/*
 %dir %{tcl_sitelib}/xpbs/help
-%attr(644,root,root) %{tcl_sitelib}/xpbs/help/*
+%{tcl_sitelib}/xpbs/help/*
 %dir %{tcl_sitelib}/xpbs/bin
-%attr(755,root,root) %{tcl_sitelib}/xpbs/bin/*
-%attr(644,root,root) %{tcl_sitelib}/xpbs/preferences.tcl
-%attr(644,root,root) %{tcl_sitelib}/xpbs/pbs.tcl
-%attr(644,root,root) %{tcl_sitelib}/xpbs/*.tk
-%attr(644,root,root) %{tcl_sitelib}/xpbs/tclIndex
-%attr(644,root,root) %config(noreplace) %{tcl_sitelib}/xpbs/xpbsrc
-%attr(644,root,root) %{tcl_sitelib}/xpbs/buildindex
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/buildindex
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/*.tk
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/*.tcl
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/tclIndex
-%attr(644,root,root) %config(noreplace) %{tcl_sitelib}/xpbsmon/xpbsmonrc
+%{tcl_sitelib}/xpbs/bin/*
+%{tcl_sitelib}/xpbs/preferences.tcl
+%{tcl_sitelib}/xpbs/pbs.tcl
+%{tcl_sitelib}/xpbs/*.tk
+%{tcl_sitelib}/xpbs/tclIndex
+%config(noreplace) %{tcl_sitelib}/xpbs/xpbsrc
+%{tcl_sitelib}/xpbs/buildindex
+%{tcl_sitelib}/xpbsmon/buildindex
+%{tcl_sitelib}/xpbsmon/*.tk
+%{tcl_sitelib}/xpbsmon/*.tcl
+%{tcl_sitelib}/xpbsmon/tclIndex
+%config(noreplace) %{tcl_sitelib}/xpbsmon/xpbsmonrc
 %dir %{tcl_sitelib}/xpbsmon
 %dir %{tcl_sitelib}/xpbsmon/bitmaps
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/bitmaps/*
-%attr(644,root,root) %{tcl_sitelib}/xpbsmon/help/*
-%attr(644,root,root) %{_mandir}/man1/x*
+%{tcl_sitelib}/xpbsmon/bitmaps/*
+%{tcl_sitelib}/xpbsmon/help/*
+%{_mandir}/man1/x*
 
 
