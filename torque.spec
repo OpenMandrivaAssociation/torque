@@ -1,6 +1,6 @@
 %define name    torque
 %define version 2.3.7
-%define release %mkrel 1
+%define release %mkrel 2
 %define lib_name_orig lib%{name}
 %define major           2
 %define	libname	%mklibname %{name} %{major}
@@ -116,7 +116,9 @@ software support,products, and information."
 %prep
 %setup -q
 %patch13 -p1 -b .destdir~
+%if %{mdkversion} >= 200910
 %patch14 -p1 -b .tcl86~
+%endif
 
 # these variables aren't ever set in any file that gets installed,
 # so without doing this, xpbs won't run - AdamW 2008/12
