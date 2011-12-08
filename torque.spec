@@ -125,9 +125,9 @@ software support,products, and information."
 sed -i -e 's,$xpbs_datadump,xpbs_datadump,g' src/gui/pbs.tcl
 sed -i -e 's,$xpbs_scriptload,xpbs_scriptload,g' src/gui/pbs.tcl
 
-cp %{SOURCE3} $RPM_BUILD_DIR/%{name}-%{version}/PBS_doc_v2.3_admin.pdf
-cp %{SOURCE10} $RPM_BUILD_DIR/%{name}-%{version}/introduction_openPBS
-cp %{SOURCE15} $RPM_BUILD_DIR/%{name}-%{version}/para_job_pbs.sh
+cp %{SOURCE3} %{_builddir}/%{name}-%{version}/PBS_doc_v2.3_admin.pdf
+cp %{SOURCE10} %{_builddir}/%{name}-%{version}/introduction_openPBS
+cp %{SOURCE15} %{_builddir}/%{name}-%{version}/para_job_pbs.sh
 
 %pre 
 /usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
@@ -145,7 +145,7 @@ CFLAGS="%{optflags} -std=gnu99" \
 	--enable-server \
 	--enable-mom \
 	--enable-client \
-	--srcdir=${RPM_BUILD_DIR}/%{name}-%{version} \
+	--srcdir=%{_builddir}/%{name}-%{version} \
 	--enable-gui \
 	-x-libraries=%_libdir
 	
@@ -224,7 +224,7 @@ rm -f %{buildroot}%{_libdir}/xpbsmon/tclIndex
 echo "# MOM server configuration file" > ${pbs_server_home_for_install}/mom_priv/config
 echo "# if more than one value, separate it by comma." >> ${pbs_server_home_for_install}/mom_priv/config
 
-cp -av $RPM_BUILD_DIR/%{name}-%{version}/src/include/* %{buildroot}%{_includedir}/%{name}-%{version}/
+cp -av %{_builddir}/%{name}-%{version}/src/include/* %{buildroot}%{_includedir}/%{name}-%{version}/
 
 perl -pi -e 's/wish8\.3/wish/' %buildroot%_bindir/xpbs
 
