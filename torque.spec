@@ -1,6 +1,6 @@
 %define name    torque
-%define version 2.5.3
-%define release %mkrel 1
+%define version 3.0.3
+%define release 1
 %define lib_name_orig lib%{name}
 %define major           2
 %define	libname	%mklibname %{name} %{major}
@@ -17,11 +17,10 @@ License:        OpenPBS
 URL:            http://www.clusterresources.com/products/torque-resource-manager.php
 Requires:       openssh-clients >= 2.9
 Provides:       OpenPBS
-BuildRoot:      %{_tmppath}/%{name}-%{version}
-Source0:        %{name}-%{version}.tar.gz
+Source0:        http://www.adaptivecomputing.com/resources/downloads/torque/torque-%{version}.tar.gz
 Source1:	pbs_server
 Source2:	pbs.conf	
-Source3:	PBS_doc_v2.3_admin.pdf
+Source3:	TORQUE_Administrator_GUIDE.pdf
 Source4:        pbs_mom
 Source5:        pbs_sched
 Source6:	xpbs
@@ -116,16 +115,14 @@ software support,products, and information."
 %prep
 %setup -q
 %patch13 -p1 -b .destdir~
-%if %{mdkversion} >= 200910
 %patch14 -p1 -b .tcl86~
-%endif
 
 # these variables aren't ever set in any file that gets installed,
 # so without doing this, xpbs won't run - AdamW 2008/12
 sed -i -e 's,$xpbs_datadump,xpbs_datadump,g' src/gui/pbs.tcl
 sed -i -e 's,$xpbs_scriptload,xpbs_scriptload,g' src/gui/pbs.tcl
 
-cp %{SOURCE3} %{_builddir}/%{name}-%{version}/PBS_doc_v2.3_admin.pdf
+cp %{SOURCE3} %{_builddir}/%{name}-%{version}/TORQUE_Administrator_GUIDE.pdf
 cp %{SOURCE10} %{_builddir}/%{name}-%{version}/introduction_openPBS
 cp %{SOURCE15} %{_builddir}/%{name}-%{version}/para_job_pbs.sh
 
@@ -158,7 +155,6 @@ make clean
 %make all XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
 
 %install
-rm -rf %{buildroot}
 pbs_server_home_for_install=%{buildroot}/var/spool/pbs
 
 mkdir -p %{buildroot}%{_initrddir}
@@ -230,9 +226,6 @@ perl -pi -e 's/wish8\.3/wish/' %buildroot%_bindir/xpbs
 
 %multiarch_includes $RPM_BUILD_ROOT%{_includedir}/%{name}-%{version}/pbs_config.h
 
-%clean
-rm -rf ${RPM_BUILD_ROOT}
-
 %post
 #!/bin/sh
 pbs_prefix=%_prefix
@@ -280,13 +273,8 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %preun client
 %_preun_service pbs_mom
 
-%if %mdkversion < 200900
-%postun -p /sbin/ldconfig
-%endif
-
 %files
-%defattr(-,root,root)
-%doc doc/READ_ME PBS_License.txt 
+%doc doc/READ_ME 
 %{_mandir}/man1/pbs*
 %{_mandir}/man3/pbs*
 %{_mandir}/man7/*
@@ -325,11 +313,9 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 
 %files client
 %defattr(-,root,root)
-%doc PBS_doc_v2.3_admin.pdf introduction_openPBS para_job_pbs.sh PBS_License.txt
-%config(noreplace) %{_sysconfdir}/pbs.conf
+%doc introduction_openPBS para_job_pbs.sh TORQUE_Administrator_GUIDE.pdf 
 %{_mandir}/man1/q*
 %{_mandir}/man8/q*
-%{_mandir}/man8/pbsnodes*
 %{_mandir}/man8/pbs_mom.8*
 %{_mandir}/man1/bas*
 %{_mandir}/man1/nqs*
@@ -340,14 +326,12 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_var}/spool/pbs/checkpoint
 %attr(1777,root,pbs) %{_var}/spool/pbs/undelivered
 %attr(775,root,pbs) %{_var}/spool/pbs/spool
-%config(noreplace) %{_var}/spool/pbs/pbs_environment
 %{_bindir}/q*
 %{_bindir}/chk_tree
 %{_bindir}/hostn
 %{_bindir}/nqs2pbs
 %{_bindir}/printjob
 %{_bindir}/tracejob
-%{_bindir}/pbsnodes
 %{_bindir}/pbsdsh
 %{_bindir}/setup_pbs_client
 %{_sbindir}/momctl
@@ -355,14 +339,11 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %attr(4755,root,root) %{_sbindir}/pbs_iff
 %{_sbindir}/pbs_mom
 %{_initrddir}/pbs_mom
-%config(noreplace) %{_var}/spool/pbs/server_name
 
 %files -n %{libname}
 %{_libdir}/*.so.%{major}*
 
 %files -n %{devname}
-%defattr(-,root,root)
-%doc PBS_License.txt
 %{_libdir}/*.la
 %{_libdir}/*.so
 %{_libdir}/*.a
@@ -373,8 +354,6 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %multiarch %{multiarch_includedir}/%{name}-%{version}/pbs_config.h
 
 %files xpbs
-%defattr(-,root,root)
-%doc PBS_License.txt
 %{_bindir}/pbs_tclsh
 %{_bindir}/pbs_wish
 %{_bindir}/xpbsmon
@@ -393,6 +372,7 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{tcl_sitelib}/xpbs/buildindex
 %{tcl_sitelib}/xpbsmon/buildindex
 %{tcl_sitelib}/xpbsmon/*.tk
+%dir %{tcl_sitelib}/xpbsmon/help
 %{tcl_sitelib}/xpbsmon/*.tcl
 %{tcl_sitelib}/xpbsmon/tclIndex
 %config(noreplace) %{tcl_sitelib}/xpbsmon/xpbsmonrc
