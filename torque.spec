@@ -1,5 +1,5 @@
 %define name    torque
-%define version 3.0.3
+%define version 3.0.4
 %define release 1
 %define lib_name_orig lib%{name}
 %define major           2
