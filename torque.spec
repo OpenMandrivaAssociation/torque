@@ -1,6 +1,6 @@
 %define name    torque
-%define version 3.0.4
-%define release 2
+%define version 3.0.5
+%define release 1
 %define lib_name_orig lib%{name}
 %define major           2
 %define	libname	%mklibname %{name} %{major}
@@ -144,6 +144,7 @@ CFLAGS="%{optflags} -std=gnu99" \
 	--enable-client \
 	--srcdir=%{_builddir}/%{name}-%{version} \
 	--enable-gui \
+	--disable-static \
 	-x-libraries=%_libdir
 	
 %ifarch x86_64
@@ -344,9 +345,7 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_libdir}/*.so.%{major}*
 
 %files -n %{devname}
-%{_libdir}/*.la
 %{_libdir}/*.so
-%{_libdir}/*.a
 %{_mandir}/man3/tm*
 %{_mandir}/man3/rpp.3.*
 %{_includedir}/%{name}-%{version}
