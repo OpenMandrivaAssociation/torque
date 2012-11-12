@@ -1,0 +1,20 @@
+sources:
+  "introduction_openPBS:"	04a2d3b7e7e69e49e65017808cda956ef080aa9b
+  "pbs:"	5b97ddbd653280d4f780e0c416234274af85ae6e
+  "pbs.conf:"	f25699ef55ddcb68f179d8fe358ab253a01bc7ed
+  "pbs_config.sample:"	037db985c9b66a543083c82644e44857d89deb38
+  "pbs-epilogue:"	2e0b0046a9be4d8e001a1997a5b3be5ba6f64a0e
+  "pbs_mom:"	eb4f0cdff0fc4f23c72f33174c9de4bbec45a8cc
+  "pbs_para_job.sh:"	1aa31e47295b6a9f4dd8eb82f798dddb1fdcf6d2
+  "pbs-prologue:"	00b78da59c55bbd5435d821da132774e1a7a163d
+  "pbs_sched:"	55056437a5efa5d067be28297d5d904521273040
+  "pbs_server:"	f7c074fa3e7312944082b1553df72de79f70645c
+  "setup_pbs_client:"	355d9ffee6ed37a7b746299f78aa6b3653065e9b
+  "setup_pbs_server:"	65880d5812e590029fb61e12b110c2027605c725
+  "tclIndex_xpbs:"	1e1f3b8f72559cccf4d708788892174634f186ef
+  "tclIndex_xpbsmon:"	4dc9e9d5372c616250fcb837f69fd25b5a3e8872
+  "torque-3.0.5.tar.gz:"	4da5b97f1cd3b7316f02559f6bb3fb70ba969b59
+  "TORQUE_Administrator_GUIDE.pdf:"	8adfd9502327e8696ecbc88b62d27d564272f7f8
+  "xpbs:"	40f381ea1b30d5f1d2276e2f685c1a6ad5acb695
+  "xpbsmon:"	138d612707ad4d5c851cc26bba62b82d0a5f4389
+  "xtermPBSlog:"	a32d8326e4e38033e13ad686d636c42eab330091
