@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# pbs_sched     This script will start and stop the PBS Scheduler
+#
+# chkconfig: 345 85 85
+# description: PBS is a batch versatile batch system for SMPs and clusters
+#
+# processname: pbs_sched
+# config: /etc/pbs.conf
+#
+# Source the library functions
+. /etc/rc.d/init.d/functions
+
+if [ -f /etc/pbs.conf ] ; then
+. /etc/pbs.conf
+else
+  echo "Can not find /etc/pbs.conf"
+  exit 1
+fi
+
+# let see how we were called
+case "${1}" in
+        start) 
+                echo -n "Starting PBS Scheduler: "
+                daemon ${pbs_exec}/sbin/pbs_sched
+                RETVAL=$?
+		[ $RETVAL -eq 0 ] && touch /var/lock/subsys/pbs_sched
+                echo
+                ;;
+        stop)
+                echo -n "Shutting down PBS Scheduler: "
+                killproc pbs_sched
+                RETVAL=$?
+		[ $RETVAL -eq 0 ] && rm -rf /var/lock/subsys/pbs_sched
+                echo
+                ;;
+        status)
+                status pbs_sched
+                RETVAL=$?
+                ;;
+        restart)
+                ${0} stop
+                ${0} start
+                RETVAL=$?
+                ;;
+	reload)
+                echo "Re-reading pbs_sched config file"
+		pbs_sched_pid=${pbs_home}/sched_priv/sched.lock
+                killproc pbs_sched -HUP 
+		RETVAL=$?
+		;;
+        *)
+                gprintf "Usage: pbs_sched {start|stop|restart|status}\n"
+                exit 1
+esac

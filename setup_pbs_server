@@ -1,0 +1,180 @@
+#!/bin/sh
+# v 1.8
+# very simple script file to configure PBS client or server 
+# 
+# set -xv
+
+###############################################################
+# set VAR there
+###############################################################
+PBS_HOME="/var/spool/pbs"
+SBIN_PATH="/usr/sbin"
+SHORTHOSTNAME=`hostname | awk -F. '{print $1}'`
+DATE=`date +%d-%m-20%y`
+DOMAINNAME=`domainname`
+SERVERNAME=${SHORTHOSTNAME}
+STARTNODEP="1"
+FINISHNODEP="3"
+NODENAME="node"
+VERSION="2.3.16"
+USERADMIN="root"
+NODEADMIN="$SHORTHOSTNAME"
+
+##############################################################
+# load VAr from /etc/clusterserver.conf if present
+##############################################################
+CONFFILE="/etc/clusterserver.conf"
+if  [ ! -f ${CONFFILE} ]; then
+	echo 
+        echo " Cant find ${CONFFILE} !"
+	echo " Using default setup_pbs_server VAR"
+else 
+	. ${CONFFILE}
+fi
+
+##############################################################
+##############################################################
+##        !!!!!! DONT TOUCH BEHIND THOSE LINE !!!!!
+##        (execpt you know waht you are doing.....)
+##############################################################
+##############################################################
+
+# setup ${PBS_HOME}/server_name ${PBS_HOME}/mom_priv/config
+set_servername() { 
+echo " - Setting servername"
+echo ${SERVERNAME} > ${PBS_HOME}/server_name
+cp -f ${PBS_HOME}/mom_priv/config ${PBS_HOME}/mom_priv/config.sauv-${DATE}
+sed -e 's/^\$clienthost.*/\$clienthost '${SHORTHOSTNAME}'/' ${PBS_HOME}/mom_priv/config.sauv-${DATE} > ${PBS_HOME}/mom_priv/config
+}
+
+# enter the configuration of ${PBS_HOME}/serv_priv/nodes file
+config_file () {
+echo " - Generating ${PBS_HOME}/server_priv/nodes"
+clean_nodefile
+if  [ -f ${CONFFILE} ]; then
+	cat /etc/nodes_list > ${PBS_HOME}/server_priv/nodes
+else
+	for i in `seq ${STARTNODEP} ${FINISHNODEP}`
+		do 
+		echo ${NODENAME}${i}.${DOMAINNAME} >> ${PBS_HOME}/server_priv/nodes
+	done
+fi
+}
+
+# create default queue on the server
+create_queue() {
+check_service_started
+echo " - Creating default queue with ${PBS_HOME}/pbs_config"
+sed -e 's/DOMAINNAME/'$DOMAINNAME'/' ${PBS_HOME}/pbs_config.sample > ${PBS_HOME}/pbs_config
+cat ${PBS_HOME}/pbs_config | qmgr
+}
+
+# cleanning config file to be sure that pbs_server will start 
+clean_nodefile() {
+echo " - Cleaning config file"
+cp /dev/null ${PBS_HOME}/server_priv/nodes
+}
+
+# check service is started
+check_service_started() {
+echo " - Checking pbs_server running"
+CHECK_STATUS=`pidof pbs_server`
+if [ -z "${CHECK_STATUS}" ]; then
+service pbs_server start
+fi
+}
+
+# wich user on wich node can administrate the PBS Server
+define_admin() {
+check_service_started
+echo " - Setting user admin"
+echo "${USERADMIN}@*.${DOMAINNAME}" > ${PBS_HOME}/server_priv/acl_svr/managers
+echo "${USERADMIN}@*.${DOMAINNAME}" > ${PBS_HOME}/server_priv/acl_svr/operators
+echo "maui@*.${DOMAINNAME}" >> ${PBS_HOME}/server_priv/acl_svr/managers
+echo "maui@*.${DOMAINNAME}" >> ${PBS_HOME}/server_priv/acl_svr/operators
+echo "*.${DOMAINNAME}" > ${PBS_HOME}/server_priv/acl_svr/acl_hosts
+}
+
+# create queue
+start_queue() {
+echo " - Starting queue"
+qstart  default small medium long verylong
+qenable default small medium long verylong
+}
+
+adjust_xpbs() {
+echo " - Adjusting xpbsmon environement"
+perl -pi -e "s/\*sitesInfo:.*/\*sitesInfo: \{Local\;ICON\;$HOSTNAME\;$HOSTNAME\;$HOSTNAME\;MOM\;\{\{\( \( totmem \- availmem \) \/ totmem \) \* 100\} \{Memory Usage\:\} SCALE\} \{\{\( loadave \/ ncpus \) \* 100\} \{Cpu Usage\:\} SCALE\} \{nusers \{Number of Users\:\} TEXT\}\}/g" TCL_SITELIB/xpbsmon/xpbsmonrc
+
+echo " - Adjusting xpbs environement"           
+perl -pi -e "s/^\*serverHosts:.*/\*serverHosts: $HOSTNAME/" TCL_SITELIB/xpbs/xpbsrc
+perl -pi -e "s/^\*selectHosts:.*/\*selectHosts: $HOSTNAME/" TCL_SITELIB/xpbs/xpbsrc
+}
+
+						
+####################################
+# main program
+####################################
+check_packages
+echo
+echo " Setting up PBS server with default configuration !"
+if [ -f /etc/clusterserver.conf ]; then
+        echo " Look in /etc/clusterserver.conf to adjust"
+else
+        echo " Look in /usr/bin/setup_pbs_server to adjust"
+fi
+echo 
+echo " Using those values to setup the PBS:"
+echo "|---------------------------------------------------|"
+echo "| domain:          ${DOMAINNAME}"
+echo "|---------------------------------------------------|"
+echo "| server name:     ${SERVERNAME}"
+echo "|---------------------------------------------------|"
+echo "| node name:       ${NODENAME}"
+echo "|---------------------------------------------------|"
+echo "| admin user:      ${USERADMIN} ${NODEADMIN}"
+echo "|---------------------------------------------------|"
+echo "| pbs directory:   ${PBS_HOME}"
+echo "|---------------------------------------------------|"
+sleep 3
+
+case ${1} in
+	queue)
+	check_service_started
+	create_queue
+	;;
+	admin)
+	define_admin
+	;;
+	xpbs)
+	adjust_xpbs
+	;;
+	all)
+	clean_nodefile
+	set_servername
+	create_queue
+	start_queue
+	config_file
+	define_admin
+	adjust_xpbs
+	service openpbs restart
+	;;
+	*)
+	echo " usage $0: {queue|admin|xpbs|all}"
+	echo
+	echo " HELP:"
+	echo " |------------------------------------------|"
+	echo " | queue:   create queue on server          |"
+	echo " | admin:   define PBS admin user           |"
+	echo " | xpbs:    adjust files xpbsrc xpbsmon     |"
+	echo " | all:     create queue, define admin user |"
+	echo " |          set server_name                 |" 
+	echo " |                                          |"
+if [ -f /etc/clusterserver.conf ]; then   
+	echo " | Check VAR in /etc/clusterserver.conf     |"
+else
+	echo " | Check VAR in /usr/bin/setup_pbs_server   |"
+fi
+	echo " |------------------------------------------|"
+	;;
+esac

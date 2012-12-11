@@ -1,28 +1,23 @@
-%define name    torque
-%define version 3.0.5
-%define release 1
-%define lib_name_orig lib%{name}
-%define major           2
-%define	libname	%mklibname %{name} %{major}
-%define	devname	%mklibname -d %{name}
+%define	lib_name_orig	lib%{name}
+%define	major		2
+%define	libname		%mklibname %{name} %{major}
+%define	devname		%mklibname -d %{name}
 
 %define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
 
-Name:           %{name}
-Summary:        The Portable Batch System
+Name:		torque
+Version:	3.0.4
+Release:	2
+Summary:	The Portable Batch System
 Group:		System/Cluster
-Version:        %{version}
-Release:        %{release}
-License:        OpenPBS
-URL:            http://www.clusterresources.com/products/torque-resource-manager.php
-Requires:       openssh-clients >= 2.9
-Provides:       OpenPBS
-Source0:        http://www.adaptivecomputing.com/resources/downloads/torque/torque-%{version}.tar.gz
+License:	OpenPBS
+URL:		http://www.clusterresources.com/products/torque-resource-manager.php
+Source0:	http://www.adaptivecomputing.com/resources/downloads/torque/torque-%{version}.tar.gz
 Source1:	pbs_server
-Source2:	pbs.conf	
+Source2:	pbs.conf
 Source3:	TORQUE_Administrator_GUIDE.pdf
-Source4:        pbs_mom
-Source5:        pbs_sched
+Source4:	pbs_mom
+Source5:	pbs_sched
 Source6:	xpbs
 Source7:	xpbsmon
 Source8:	tclIndex_xpbsmon
@@ -32,19 +27,20 @@ Source11:	xtermPBSlog
 Source12:	pbs
 Source13:	setup_pbs_server
 Source14:	pbs_config.sample
-Source15:	pbs_para_job.sh	
+Source15:	pbs_para_job.sh
 Source17:	pbs-epilogue
 Source18:	pbs-prologue
 Source19:	setup_pbs_client
 Patch13:	torque-2.1.11-destdir.patch
 Patch14:	torque-2.3.7-tcl86.patch
-BuildRequires:	tk >= 8.3 tk-devel >= 8.3 
+BuildRequires:	tk >= 8.3 pkgconfig(tk) >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
 BuildRequires:	X11-devel readline-devel
+Requires:	openssh-clients >= 2.9
 Provides:	OpenPBS
 Obsoletes:	OpenPBS
-Requires(post): rpm-helper
+Requires(post):	rpm-helper
 Requires(preun): rpm-helper
 
 %description
@@ -67,13 +63,13 @@ Group:		System/Libraries
 Library for %{name}.
 
 %package -n	%{devname}
-Summary:	The Portable Batch System (PBS) devel 
+Summary:	The Portable Batch System (PBS) devel
 Group:		Development/Other
 Requires:	%{libname} = %{version}
 Provides:	%{_lib}%{name}1-devel = %{version}-%{release}
 Obsoletes:	%{_lib}%{name}1-devel
-Provides:	lib%name-devel = %version-%release
-Provides:	%name-devel = %version-%release
+Provides:	lib%{name}-devel = %{version}-%{release}
+Provides:	%{name}-devel = %{version}-%{release}
 
 %description -n %{devname}
 The Portable Batch System (PBS) function prototype.
@@ -84,12 +80,12 @@ software support,products, and information."
 
 %package	client
 Summary:	The Portable Batch System (PBS) client
-Requires:       openssh-clients >= 2.9
+Requires:	openssh-clients >= 2.9
 Group:		System/Cluster
 Provides:	OpenPBS-client
 Obsoletes:	OpenPBS-client
-Requires(post): rpm-helper
-Requires(preun): rpm-helper
+Requires(post):	rpm-helper
+Requires(preun):rpm-helper
 
 %description	client
 The Portable Batch System (PBS) client.
@@ -98,10 +94,10 @@ Center, Lawrence Livermore National Laboratory, and Veridian
 Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
 software support,products, and information."
 
-%package        xpbs
+%package	xpbs
 Requires:	tk >= 8.3, tcl >= 8.3, %{name}-client = %{version}-%{release}
-Summary:        The Portable Batch System (PBS) X interface 
-Group:          Monitoring
+Summary:	The Portable Batch System (PBS) X interface 
+Group:		Monitoring
 Provides:	OpenPBS-xpbs
 Obsoletes:	OpenPBS-xpbs
 
@@ -144,8 +140,7 @@ CFLAGS="%{optflags} -std=gnu99" \
 	--enable-client \
 	--srcdir=%{_builddir}/%{name}-%{version} \
 	--enable-gui \
-	--disable-static \
-	-x-libraries=%_libdir
+	-x-libraries=%{_libdir}
 	
 %ifarch x86_64
 	perl -pi -e 's|\-L\$\(TCL\_DIR\)/lib|\-L\$\(TCL\_DIR\)/lib64|g' src/tools/Makefile
@@ -184,13 +179,12 @@ install -m755 %{SOURCE12} %{buildroot}%{_initrddir}/openpbs
 install -m644 %{SOURCE2} %{buildroot}%{_sysconfdir}/pbs.conf
 install -m644 %{SOURCE11} %{buildroot}%{_sbindir}/pbslogs
 
-%makeinstall_std PBS_SERVER_HOME=/var/spool/pbs mandir=%_mandir XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
+%makeinstall_std PBS_SERVER_HOME=/var/spool/pbs mandir=%{_mandir} XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
 
 mkdir -p %{buildroot}%{_sbindir}
 chmod 755 %{buildroot}%{_sbindir}/pbs_mom
 chmod 755 %{buildroot}%{_sbindir}/pbs_sched
 chmod 755 %{buildroot}%{_sbindir}/pbs_iff
-#chmod 755 %{buildroot}%{_sbindir}/pbs_rcp
 chmod 755 %{buildroot}%{_sbindir}/pbs_server
 chmod 755 %{buildroot}%{_initrddir}/openpbs
 
@@ -223,13 +217,13 @@ echo "# if more than one value, separate it by comma." >> ${pbs_server_home_for_
 
 cp -av %{_builddir}/%{name}-%{version}/src/include/* %{buildroot}%{_includedir}/%{name}-%{version}/
 
-perl -pi -e 's/wish8\.3/wish/' %buildroot%_bindir/xpbs
+perl -pi -e 's/wish8\.3/wish/' %{buildroot}%{_bindir}/xpbs
 
-%multiarch_includes $RPM_BUILD_ROOT%{_includedir}/%{name}-%{version}/pbs_config.h
+%multiarch_includes %{buildroot}%{_includedir}/%{name}-%{version}/pbs_config.h
 
 %post
 #!/bin/sh
-pbs_prefix=%_prefix
+pbs_prefix=%{_prefix}
 pbs_server_home=/var/spool/pbs
 if [ -f "${pbs_server_home}/server_name" ]; then
         echo `hostname` > ${pbs_server_home}/server_name
@@ -275,7 +269,7 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %_preun_service pbs_mom
 
 %files
-%doc doc/READ_ME 
+%doc doc/READ_ME
 %{_mandir}/man1/pbs*
 %{_mandir}/man3/pbs*
 %{_mandir}/man7/*
@@ -313,7 +307,6 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_var}/spool/pbs/pbs_config.sample
 
 %files client
-%defattr(-,root,root)
 %doc introduction_openPBS para_job_pbs.sh TORQUE_Administrator_GUIDE.pdf 
 %{_mandir}/man1/q*
 %{_mandir}/man8/q*
@@ -345,7 +338,9 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_libdir}/*.so.%{major}*
 
 %files -n %{devname}
+#{_libdir}/*.la
 %{_libdir}/*.so
+%{_libdir}/*.a
 %{_mandir}/man3/tm*
 %{_mandir}/man3/rpp.3.*
 %{_includedir}/%{name}-%{version}
@@ -380,5 +375,3 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{tcl_sitelib}/xpbsmon/bitmaps/*
 %{tcl_sitelib}/xpbsmon/help/*
 %{_mandir}/man1/x*
-
-

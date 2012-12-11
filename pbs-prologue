@@ -1,0 +1,14 @@
+#!/bin/sh
+# prologue
+# Script is run under uid of root
+# argv[1] is the jobid
+# argv[2] is the user's name
+# argv[3] is the user's group name
+jobid=$1
+user=$2
+group=$3
+
+/bin/mkdir /var/spool/pbs/spool/${user}_${jobid}
+chown ${user} /var/spool/pbs/spool/${user}_${jobid}
+chgrp ${group} /var/spool/pbs/spool/${user}_${jobid}
+# chmod 777 /var/spool/pbs/spool/${user}_${jobid}

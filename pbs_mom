@@ -1,0 +1,56 @@
+#!/bin/sh
+#
+# pbs_mom       This script will start and stop the PBS Mom
+#
+# chkconfig: 345 85 85
+# description: PBS is a batch versatile batch system for SMPs and clusters
+#
+# processname: pbs_mom
+# config: /etc/pbs.conf
+
+ulimit -n 32768
+# Source the library functions
+. /etc/rc.d/init.d/functions
+
+if [ -f /etc/pbs.conf ] ; then
+. /etc/pbs.conf
+else
+  echo "Can not find /etc/pbs.conf"
+  exit 1
+fi
+
+# let see how we were called
+case "$1" in
+        start) 
+                echo -n "Starting PBS Mom: "
+                daemon $pbs_exec/sbin/pbs_mom -r
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && touch /var/lock/subsys/pbs_mom
+
+                echo
+                ;;
+        stop)
+                echo -n "Shutting down PBS Mom: "
+                killproc pbs_mom
+		RETVAL=$?
+		[ $RETVAL -eq 0 ] && rm -rf /var/lock/subsys/pbs_mom
+                echo
+                ;;
+        status)
+                status pbs_mom
+		RETVAL=$?
+                ;;
+        restart)
+                $0 stop
+                $0 start
+		RETVAL=$?
+                ;;
+        reload)
+                gprintf "Re-reading pbs_mom config file"
+                killproc pbs_mom -HUP
+                RETVAL=$?
+                ;;
+        *)
+                gprintf "Usage: pbs_mom {start|stop|restart|reload|status}\n"
+                exit 1
+esac

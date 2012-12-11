@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# pbs_server    This script will start and stop the PBS Server
+#
+# chkconfig: 345 85 85
+# description: PBS is a batch versatile batch system for SMPs and clusters
+#
+# processname: pbs_server
+# config: /etc/pbs.conf
+#
+# Source the library functions
+. /etc/rc.d/init.d/functions
+
+if [ -f /etc/pbs.conf ] ; then
+. /etc/pbs.conf
+else
+  gprintf "Can not find /etc/pbs.conf\n"
+  exit 1
+fi
+
+# let see how we were called
+case "${1}" in
+        start) 
+                gprintf "Starting PBS Server: "
+                if [ -r ${pbs_home}/server_priv/serverdb ]
+                then
+                        daemon ${pbs_exec}/sbin/pbs_server
+			RETVAL=$?
+		        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/pbs_server
+                else
+                        daemon ${pbs_exec}/sbin/pbs_server -t create
+			RETVAL=$?
+		        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/pbs_server
+                fi
+                echo
+                ;;
+        stop)
+                gprintf "Shutting down PBS Server: "
+                killproc pbs_server
+		RETVAL=$?
+		[ $RETVAL -eq 0 ] && rm -rf /var/lock/subsys/pbs_server
+                echo
+                ;;
+        status)
+                status pbs_server
+	        RETVAL=$?
+
+                ;;
+        restart)
+                ${0} stop
+                ${0} start
+		RETVAL=$?
+                ;;
+	reload)
+                gprintf "Re-reading pbs_server config file"
+                killproc pbs_server -HUP
+		RETVAL=$?
+		;;
+        *)
+                gprintf "Usage: pbs_server {start|stop|restart|status}\n"
+                exit 1
+esac
