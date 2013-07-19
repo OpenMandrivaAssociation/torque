@@ -36,7 +36,8 @@ Patch14:	torque-2.3.7-tcl86.patch
 BuildRequires:	tk >= 8.3 pkgconfig(tk) >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
-BuildRequires:	X11-devel readline-devel
+BuildRequires: 	pkgconfig(xmu)
+BuildRequires:	readline-devel
 Requires:	openssh-clients >= 2.9
 Provides:	OpenPBS
 Obsoletes:	OpenPBS
@@ -345,7 +346,7 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_mandir}/man3/rpp.3.*
 %{_includedir}/%{name}-%{version}
 %{_includedir}/*.h
-%multiarch %{multiarch_includedir}/%{name}-%{version}/pbs_config.h
+%{multiarch_includedir}/%{name}-%{version}/pbs_config.h
 
 %files xpbs
 %{_bindir}/pbs_tclsh
