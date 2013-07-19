@@ -36,6 +36,7 @@ Patch14:	torque-2.3.7-tcl86.patch
 BuildRequires:	tk >= 8.3 pkgconfig(tk) >= 8.3 
 BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
 BuildRequires:	openssh openssh-clients
+BuildRequires:	pkgconfig(libtirpc)
 BuildRequires: 	pkgconfig(xmu)
 BuildRequires:	readline-devel
 Requires:	openssh-clients >= 2.9
