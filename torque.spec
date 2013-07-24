@@ -6,8 +6,8 @@
 %define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
 
 Name:		torque
-Version:	3.0.4
-Release:	2
+Version:	3.0.5
+Release:	1
 Summary:	The Portable Batch System
 Group:		System/Cluster
 License:	OpenPBS
