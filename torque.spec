@@ -31,6 +31,7 @@ Source15:	pbs_para_job.sh
 Source17:	pbs-epilogue
 Source18:	pbs-prologue
 Source19:	setup_pbs_client
+Source100:	torque.rpmlintrc
 Patch13:	torque-2.1.11-destdir.patch
 Patch14:	torque-2.3.7-tcl86.patch
 BuildRequires:	tk >= 8.3 pkgconfig(tk) >= 8.3 
