@@ -340,9 +340,7 @@ ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
 %{_libdir}/*.so.%{major}*
 
 %files -n %{devname}
-#{_libdir}/*.la
 %{_libdir}/*.so
-%{_libdir}/*.a
 %{_mandir}/man3/tm*
 %{_mandir}/man3/rpp.3.*
 %{_includedir}/%{name}-%{version}
