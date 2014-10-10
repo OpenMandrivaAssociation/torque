@@ -2,12 +2,14 @@
 %define	major		2
 %define	libname		%mklibname %{name} %{major}
 %define	devname		%mklibname -d %{name}
+# hacky workaround to be fixed!
+%define __noautoreq '/usr/bin/tclsh8.6'
 
 %define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
 
 Name:		torque
 Version:	3.0.5
-Release:	1
+Release:	2
 Summary:	The Portable Batch System
 Group:		System/Cluster
 License:	OpenPBS
