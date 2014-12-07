@@ -9,7 +9,7 @@
 
 Name:		torque
 Version:	3.0.5
-Release:	2
+Release:	3
 Summary:	The Portable Batch System
 Group:		System/Cluster
 License:	OpenPBS
