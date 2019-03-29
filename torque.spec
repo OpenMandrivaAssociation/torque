@@ -42,6 +42,7 @@ BuildRequires:	openssh openssh-clients
 BuildRequires:	pkgconfig(libtirpc)
 BuildRequires: 	pkgconfig(xmu)
 BuildRequires:	readline-devel
+BuildRequires:	pkgconfig(xscrnsaver)
 Requires:	openssh-clients >= 2.9
 Provides:	OpenPBS
 Obsoletes:	OpenPBS
@@ -136,7 +137,7 @@ cp %{SOURCE15} %{_builddir}/%{name}-%{version}/para_job_pbs.sh
 
 %build
 CFLAGS="%{optflags} -std=gnu99" \
-%configure2_5x \
+%configure \
 	--with-rcp=scp \
 	--with-server-home=/var/spool/pbs \
 	--enable-docs \
