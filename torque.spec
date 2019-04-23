@@ -15,6 +15,7 @@
 #scripts coming along with the source files
 %define         torquedir          /var/spool/torque
 %define         srcversion         %{version}
+%bcond_with	gui
 
 Name:           torque
 Summary:        The Torque resource and queue manager
@@ -44,7 +45,9 @@ BuildRequires:  xauth
 BuildRequires:  gperf
 BuildRequires:  doxygen
 BuildRequires:  pkgconfig(ncurses)
+%if %{with gui}
 BuildRequires:  pkgconfig(tk)
+%endif
 BuildRequires:  pkgconfig(tcl)
 BuildRequires:  openssh-clients
 BuildRequires:  readline-devel
@@ -154,6 +157,7 @@ Requires(preun):rpm-helper
 
 
 
+%if %{with gui}
 %package -n     %{guiname}
 Summary:        Graphical clients for Torque
 Group:          Monitoring
@@ -166,7 +170,7 @@ Obsoletes:      torque-xpbs <= 2.5.3
 
 %description -n %{guiname}
 %{summary}.
-
+%endif
 
 %prep
 %setup -q -n %{name}-%{srcversion}
@@ -192,7 +196,9 @@ export CXX=g++
                 --enable-drmaa \
                 --enable-high-availability \
                 --enable-syslog \
+%if %{with gui}
                 --enable-gui \
+%endif
                 --disable-static \
                 --with-default-server=MYSERVERNAME \
 		--enable-autorun \
@@ -475,6 +481,7 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 
 
 
+%if %{with gui}
 %files -n %{guiname}
 %{_bindir}/xpbs*
 %{_bindir}/pbs_wish
@@ -484,276 +491,4 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_libdir}/xpbs
 %{_libdir}/xpbsmon
 %{_mandir}/man1/xpbs*.1*
-
-
-
-%changelog
-* Tue Oct 02 2018 umeabot <umeabot> 6.1.2-3.mga7
-  (not released yet)
-+ Revision: 1315191
-- Mageia 7 Mass Rebuild
-
-* Fri Jun 22 2018 daviddavid <daviddavid> 6.1.2-2.mga7
-+ Revision: 1238868
-- rebuild for new hwloc 2.0.1
-
-* Thu Mar 15 2018 eatdirt <eatdirt> 6.1.2-1.mga7
-+ Revision: 1209597
-- Upgrade to version 6.1.2
-
-* Tue Jan 02 2018 wally <wally> 6.1.1.1-3.mga7
-+ Revision: 1189478
-- rebuild for new readline
-
-* Fri Oct 13 2017 cjw <cjw> 6.1.1.1-2.mga7
-+ Revision: 1171667
-- fix build with gcc 7
-
-* Tue May 02 2017 eatdirt <eatdirt> 6.1.1.1-1.mga6
-+ Revision: 1098469
-- Upgrade to version 6.1.1.1
-
-* Tue Mar 07 2017 eatdirt <eatdirt> 6.1.0-2.mga6
-+ Revision: 1089505
-- Rebuild for new hwloc
-
-* Fri Dec 02 2016 eatdirt <eatdirt> 6.1.0-1.mga6
-+ Revision: 1071705
-- Upgrade to latest stable version 6.1.0
-
-* Fri Apr 01 2016 eatdirt <eatdirt> 6.0.1-1.mga6
-+ Revision: 997378
-- Upgrade to version 6.0.1
-
-* Wed Feb 17 2016 umeabot <umeabot> 5.1.1.2-3.mga6
-+ Revision: 963091
-- Mageia 6 Mass Rebuild
-
-* Mon Oct 05 2015 eatdirt <eatdirt> 5.1.1.2-2.mga6
-+ Revision: 886494
-- Rebuild for new tcl8.6
-
-* Tue Sep 29 2015 eatdirt <eatdirt> 5.1.1.2-1.mga6
-+ Revision: 885217
-- Upgrade to version 5.1.1.2
-
-* Sun Aug 16 2015 eatdirt <eatdirt> 4.2.10-1.mga6
-+ Revision: 865142
-- Upgrade to version 4.2.10
-
-* Wed Oct 15 2014 umeabot <umeabot> 4.2.9-3.mga5
-+ Revision: 744429
-- Second Mageia 5 Mass Rebuild
-
-* Thu Oct 09 2014 eatdirt <eatdirt> 4.2.9-2.mga5
-+ Revision: 737662
-- Add scriptlet to set correct server name in config files
-
-* Sat Oct 04 2014 eatdirt <eatdirt> 4.2.9-1.mga5
-+ Revision: 736714
-- Upgrade to 4.2.9, fix security issue CVE-201403684 (mga#14226)
-
-* Fri Sep 26 2014 tv <tv> 4.2.8-3.mga5
-+ Revision: 725252
-- rebuild for bogus file deps
-
-* Tue Sep 16 2014 umeabot <umeabot> 4.2.8-2.mga5
-+ Revision: 689926
-- Mageia 5 Mass Rebuild
-+ tv <tv>
-- s/uggests:/Recommends:/
-
-* Fri Jun 06 2014 eatdirt <eatdirt> 4.2.8-1.mga5
-+ Revision: 634180
-- Upgrade to version 4.2.8
-
-* Wed Mar 12 2014 eatdirt <eatdirt> 4.1.7-2.mga5
-+ Revision: 602625
-- Fix bug in torque_createdb script
-- Add scripts for post install configuration (needed for systemd support)
-+ philippem <philippem>
-- switch to systemd
-
-* Tue Feb 25 2014 eatdirt <eatdirt> 4.1.7-1.mga5
-+ Revision: 597240
-- Upgrade to version 4.1.7
-
-* Thu Nov 14 2013 luigiwalser <luigiwalser> 4.1.6-4.mga4
-+ Revision: 551153
-- add upstream patch to fix CVE-2013-4495
-- fix URL
-
-* Mon Oct 21 2013 umeabot <umeabot> 4.1.6-3.mga4
-+ Revision: 540672
-- Mageia 4 Mass Rebuild
-
-* Wed Oct 09 2013 luigiwalser <luigiwalser> 4.1.6-2.mga4
-+ Revision: 494195
-- add upstream patch to fix CVE-2013-4319
-
-* Mon Jul 01 2013 eatdirt <eatdirt> 4.1.6-1.mga4
-+ Revision: 449456
-- Fixing missing BR
-- Upgrade to version 4.1.6, cleaning spec file
-
-* Wed Apr 03 2013 eatdirt <eatdirt> 4.1.5.1-1.mga3
-+ Revision: 407379
-- Upgrade to 4.1.5.1 (bugs fix release)
-
-* Mon Jan 14 2013 umeabot <umeabot> 4.1.4-2.mga3
-+ Revision: 384682
-- Mass Rebuild - https://wiki.mageia.org/en/Feature:Mageia3MassRebuild
-
-* Tue Jan 08 2013 eatdirt <eatdirt> 4.1.4-1.mga3
-+ Revision: 343214
-- Upgrade to version 4.1.4
-+ rtp <rtp>
-- fix build-dep
-
-* Thu Nov 01 2012 eatdirt <eatdirt> 4.1.3-1.mga3
-+ Revision: 312289
-- Upgrade to version 4.1.3
-
-* Sun Sep 02 2012 eatdirt <eatdirt> 4.1.1-1.mga3
-+ Revision: 287155
-- Upgrading to branch 4.1.1
-
-* Sat Aug 25 2012 eatdirt <eatdirt> 2.5.12-2.mga3
-+ Revision: 283811
-- Fixing missing Obsolete and Deps
-
-* Fri Aug 24 2012 eatdirt <eatdirt> 2.5.12-1.mga3
-+ Revision: 283731
-- Upgrade to 2.5.12 (latest of branch 2), specfile rewritten from scratch
-
-* Sun Apr 29 2012 colin <colin> 2.5.3-4.mga2
-+ Revision: 234229
-- Disable unused-but-set-variable error checks (breaks build)
-- Add LSB headers to initscripts (mga#5262)
-
-* Wed Jul 06 2011 fwang <fwang> 2.5.3-3.mga2
-+ Revision: 119194
-- disable tcl 8.6 patch
-- br openssh-clients
-- rebuild for new tcl
-
-* Tue Jun 28 2011 ahmad <ahmad> 2.5.3-2.mga2
-+ Revision: 115316
-- Drop the buildroot declaration
-- Drop old/unneeded scriptlets
-- imported package torque
-
-
-* Sun Nov 28 2010 Sandro Cazzaniga <kharec@mandriva.org> 2.5.3-1mdv2011.0
-+ Revision: 602397
-- new version 2.5.3
-
-  + Lev Givon <lev@mandriva.org>
-    - Forgot to remove 2.4.5 tarball.
-
-* Mon May 10 2010 Antoine Ginies <aginies@mandriva.com> 2.4.8-1mdv2010.1
-+ Revision: 544318
-- release 2.4.8
-
-* Tue Feb 09 2010 Antoine Ginies <aginies@mandriva.com> 2.4.5-1mdv2010.1
-+ Revision: 502714
-- release 2.4.5
-
-  + Giuseppe Ghibò <ghibo@mandriva.com>
-    - Let Patch14 for TCL 8.6 conditional (needed for backporting over older tcl versions).
-
-* Thu Jul 23 2009 Per Øyvind Karlsen <peroyvind@mandriva.org> 2.3.7-1mdv2010.0
-+ Revision: 398757
-- bump major
-- place library in it's own separate package rather than in the devel package
-- cleanups
-- regenerate P14
-- drop dead patches
-- new release: 2.3.7
-- add readline-devel to buildrequires
-- use %%configure2_5x macro
-- fix string format issues (P0)
-- regenarate P9, P13, P14
-- drop Prefix tag
-- drop unused patches
-- new release: 2.1.11
-
-* Sat Dec 06 2008 Adam Williamson <awilliamson@mandriva.org> 2.1.7-6mdv2009.1
-+ Revision: 310969
-- rebuild for new tcl
-- install to new location per policy
-- make sure everything's on the same page with regards to /var/spool/pbs
-- fix a code bug that prevents xpbs running
-- add tcl86.patch (fix/kludge build for tcl 8.6)
-- fix a #%%define
-
-  + Thierry Vignaud <tv@mandriva.org>
-    - rebuild
-    - rebuild
-
-  + Pixel <pixel@mandriva.com>
-    - do not call ldconfig in %%post/%%postun, it is now handled by filetriggers
-
-* Fri Dec 21 2007 Olivier Blin <oblin@mandriva.com> 2.1.7-3mdv2008.1
-+ Revision: 136550
-- restore BuildRoot
-
-  + Thierry Vignaud <tv@mandriva.org>
-    - kill re-definition of %%buildroot on Pixel's request
-    - buildrequires X11-devel instead of XFree86-devel
-    - kill packager tag
-
-* Fri Sep 07 2007 Anssi Hannula <anssi@mandriva.org> 2.1.7-3mdv2008.0
-+ Revision: 82052
-- rebuild for new soname of tcl
-
-* Fri Jun 22 2007 Thierry Vignaud <tv@mandriva.org> 2.1.7-2mdv2008.0
-+ Revision: 42958
-- uncompress a patch, thus fixing build
-- fix group
-
-
-* Tue Feb 27 2007 Olivier Thauvin <nanardon@mandriva.org> 2.1.7-1mdv2007.0
-+ Revision: 126203
-- fix buildrequirements
-- clean up patch
-- fix path installation
-- 2.1.7
-
-  + Lev Givon <lev@mandriva.org>
-    - Import torque
-
-* Wed Jan 04 2006 Oden Eriksson <oeriksson@mandriva.com> 2.0.0-2mdk
-- rebuilt against soname aware deps (tcl/tk)
-- fix deps
-
-* Thu Nov 17 2005 Antoine Ginies <aginies@n3.mandriva.com> 2.0.0-1mdk
-- release 2.0.0p1
-
-* Thu Mar 17 2005 Antoine Ginies <aginies@mandrakesoft.com> 1.2.0-1mdk
-- release 1.2.0p1
-- fix acces to xpbs and xpbsmon
-
-* Tue Jun 22 2004 Erwan Velu <erwan@mandrakesoft.com> 1.1.0-1mdk
-- 1.1.0
-
-* Thu May 06 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-7mdk
-- Fixing wrong rights on /usr/include/torque
-
-* Thu Apr 22 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-6mdk
-- Adding Torque1.0.1p6-comment.diff
-
-* Tue Apr 20 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-5mdk
-- Release p6
-- Adding %%subrelease to builddir
-
-* Tue Mar 02 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-4mdk
-- Fix DIRM (distlint)
-- Fix dep wish8.3
-
-* Mon Mar 01 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-3mdk
-- fix -devel provides
-
-* Mon Mar 01 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-2mdk
-- Provides/Obsoletes: PBS
-
+%endif
