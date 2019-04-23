@@ -15,7 +15,7 @@
 #scripts coming along with the source files
 %define         torquedir          /var/spool/torque
 %define         srcversion         %{version}
-%bcond_with	gui
+%bcond_without	gui
 
 Name:           torque
 Summary:        The Torque resource and queue manager
@@ -206,7 +206,6 @@ export CXX=g++
                 --without-debug
 #                --enable-nvidia-gpus
 #                --enable-numa-support
-
 
 %make_build all \
                 XPBS_DIR=%{tcl_sitelib}/xpbs \
