@@ -1,0 +1,52 @@
+#!/bin/bash
+
+## this script takes as an argument the torque home spool directory and
+## the full path of pbs_sever. Then it checks that a serverdb file
+## exists and if not, create it. This task used to be done by the
+## sysvinit scripts which have been replaced by systemd support on
+## mageia. This script should be used as a post install scriplet.
+
+
+if [ $# -ne 2 ]; then
+    echo "torque_createdb should be called with PBS_HOME and PBS_DAEMON as arguments"
+    exit
+fi
+
+PBS_HOME=$1
+PBS_DAEMON=$2
+PBS_SERVERDB=$PBS_HOME/server_priv/serverdb
+PBS_NODES=$PBS_HOME/server_priv/nodes
+
+if [ ! -r $PBS_SERVERDB ]; then
+
+    echo "Torque serverdb configuration not found:"
+    echo "creating $PBS_SERVERDB..."
+    for SLEEP in 1 2 4 ; do
+        $PBS_DAEMON -d $PBS_HOME -f -t create &
+	sleep $SLEEP
+	pidpbs=`pidof -c $PBS_DAEMON`
+        kill $pidpbs
+	sleep $SLEEP
+	if [ -r $PBS_SERVERDB ]; then
+	    break
+	fi
+    done
+
+    if [ -r $PBS_SERVERDB ]; then
+#fix a bug in pbs_server which erases the node files
+	if [ ! -h $PBS_NODES ]; then	    
+	    ln -s /etc/torque/nodes $PBS_NODES
+	    echo "link to nodes file created"
+	fi
+	echo "done."
+	exit 0
+    else
+	echo "failed!"
+	exit 1
+    fi
+    
+else
+    echo "Torque serverdb configuration found:"
+    echo "...keeping current file $PBS_SERVERDB"
+    exit 0
+fi

@@ -1,0 +1,22 @@
+#
+#example submission file for openmp job.
+#
+#!/bin/bash
+#PBS -S /bin/bash
+#PBS -l nodes=1:ppn=2,walltime=00:01:00
+#PBS -q openmp
+#PBS -N myjob
+#PBS -e myjob.stderr
+#PBS -o myjob.stdout
+
+export OMP_NUM_THREADS=2
+
+#set your job location
+export RUNDIR=/tmp
+
+#start the job at the right location
+cd $RUNDIR
+
+#as an example, the job sleep 30s and list the directory's content
+sleep 30; ls -trl
+

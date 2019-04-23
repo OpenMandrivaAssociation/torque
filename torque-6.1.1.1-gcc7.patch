@@ -1,0 +1,123 @@
+--- torque-6.1.1.1/src/lib/Libattr/req.cpp.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/lib/Libattr/req.cpp	2017-10-13 14:16:20.788450139 +0200
+@@ -1042,7 +1042,7 @@
+ 
+   if (*current == ':')
+     current++;
+-  else if (current != '\0')
++  else if (*current != '\0')
+     {
+     error = "Invalid task specification";
+     return(PBSE_BAD_PARAMETER);
+--- torque-6.1.1.1/src/include/attribute.h.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/include/attribute.h	2017-10-13 14:46:06.385876790 +0200
+@@ -511,7 +511,7 @@
+ void from_size(struct size_value *psize, char *cvnbuf);
+ void create_size_string(char *buf, struct size_value values);
+ 
+-#define NULL_FUNC '\0'
++#define NULL_FUNC NULL
+ 
+ /* other associated funtions */
+ 
+--- torque-6.1.1.1/src/server/node_manager.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/server/node_manager.c	2017-10-13 15:37:20.339179415 +0200
+@@ -925,7 +925,7 @@
+       char *attr_name = threadsafe_tokenizer(&attr_val, "=");
+ 
+       if ((attr_name != NULL) &&
+-          (attr_val != '\0'))
++          (*attr_val != '\0'))
+         {
+         if (str_to_attr(attr_name, attr_val, pjob->ji_wattr, job_attr_def, JOB_ATR_LAST) == ATTR_NOT_FOUND)
+           {
+--- torque-6.1.1.1/src/server/req_quejob.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/server/req_quejob.c	2017-10-13 15:38:42.296592905 +0200
+@@ -326,7 +326,7 @@
+       tmp = atoi(current);
+       
+       /* advance past the digits to the units */
+-      while ((current != '\0') &&
++      while ((*current != '\0') &&
+              (isdigit(*current)))
+         current++;
+ 
+--- torque-6.1.1.1/src/resmom/mom_main.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/resmom/mom_main.c	2017-10-13 15:42:07.130128102 +0200
+@@ -1065,7 +1065,7 @@
+     goto done;
+     }
+ 
+-  name[i] = '\0';
++  name[i] = NULL;
+ 
+   for (d = ret_string, resline++;*resline;)
+     {
+--- torque-6.1.1.1/src/resmom/parse_config.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/resmom/parse_config.c	2017-10-13 15:43:58.078335295 +0200
+@@ -2275,14 +2275,14 @@
+   mom_host[0] = '\0';
+   hostname_specified = 0;
+   MOMConfigRReconfig = 0;
+-  TNoSpoolDirList[0] = '\0';
++  TNoSpoolDirList[0] = NULL;
+   is_reporter_mom = FALSE;
+   is_login_node = FALSE;
+   job_exit_wait_time = DEFAULT_JOB_EXIT_WAIT_TIME;
+   jobstarter_exe_name[0] = '\0';
+   jobstarter_set = 0;
+   server_alias = NULL;
+-  TRemChkptDirList[0] = '\0';
++  TRemChkptDirList[0] = NULL;
+   tmpdir_basename[0] = '\0';  /* for $TMPDIR */
+   rcp_path[0] = '\0';
+   rcp_args[0] = '\0';
+--- torque-6.1.1.1/src/cmds/qsub_functions.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/cmds/qsub_functions.c	2017-10-13 15:46:36.376204846 +0200
+@@ -896,7 +896,7 @@
+   else
+     {
+     char *tmp_host = pbs_default();
+-    if (tmp_host == '\0')
++    if (tmp_host == NULL)
+       hash_add_or_exit(job_attr, ATTR_pbs_o_server, qsub_host, LOGIC_DATA);
+     else
+       hash_add_or_exit(job_attr, ATTR_pbs_o_server, tmp_host, LOGIC_DATA);
+--- torque-6.1.1.1/src/cmds/pbsnodes.c.gcc7	2017-04-17 19:46:31.000000000 +0200
++++ torque-6.1.1.1/src/cmds/pbsnodes.c	2017-10-13 15:49:05.636139675 +0200
+@@ -1016,7 +1016,7 @@
+         {
+         nodeargs = (char **)calloc(2, sizeof(char *));
+         nodeargs[0] = strdup("");
+-        nodeargs[1] = '\0';
++        nodeargs[1] = NULL;
+         }
+       }
+     }
+@@ -1132,7 +1132,7 @@
+ 
+         MXMLCreateE(&DE, "Data");
+ 
+-        for (lindex = 0;nodeargs[lindex] != '\0';lindex++)
++        for (lindex = 0;nodeargs[lindex] != NULL;lindex++)
+           {
+           bstatus = statnode(con, nodeargs[lindex]);
+ 
+@@ -1153,7 +1153,7 @@
+         }
+       else
+         {
+-        for (lindex = 0;nodeargs[lindex] != '\0';lindex++)
++        for (lindex = 0;nodeargs[lindex] != NULL;lindex++)
+           {
+           bstatus = statnode(con, nodeargs[lindex]);
+ 
+@@ -1177,7 +1177,7 @@
+ 
+       /* list any node that is DOWN, OFFLINE, or UNKNOWN */
+ 
+-      for (lindex = 0;nodeargs[lindex] != '\0';lindex++)
++      for (lindex = 0;nodeargs[lindex] != NULL;lindex++)
+         {
+         bstatus = statnode(con, nodeargs[lindex]);
+ 

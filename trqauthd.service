@@ -1,0 +1,9 @@
+[Unit]
+Description=Torque Authorization Daemon
+
+[Service]
+Type=forking
+ExecStart=/usr/sbin/trqauthd
+
+[Install]
+WantedBy=multi-user.target 

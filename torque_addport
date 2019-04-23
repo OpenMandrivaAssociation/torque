@@ -1,0 +1,19 @@
+#!/bin/bash
+
+CHECK_PORT=`grep 15003 /etc/services`
+if [ -z "$CHECK_PORT" ]; then
+          cat >> /etc/services << EOF
+# Standard Torque/PBS services
+pbs_server 	15001/tcp			# pbs server
+pbs_server	15001/udp			# pbs server
+pbs_mom		15002/tcp			# mom to/from server
+pbs_mom		15002/udp			# mom to/from server
+pbs_resmon	15003/tcp			# mom resource management requests
+pbs_resmon	15003/udp			# mom resource management requests
+pbs_sched	15004/tcp			# scheduler 
+pbs_sched	15004/udp			# scheduler
+trqauthd	15005/tcp			# authd
+trqauthd	15005/udp			# authd
+
+EOF
+fi

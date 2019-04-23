@@ -1,0 +1,6 @@
+#mom configuration file
+$pbsserver      MYSERVERNAME		 # note: CHANGE TO the hostname running pbs_server
+
+#example to use simple cp if /home is accessible by nfs on the computing nodes
+$usecp 		*:/home  	  /home	 # home is on nfs
+

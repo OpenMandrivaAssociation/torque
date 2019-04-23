@@ -1,381 +1,759 @@
-%define	lib_name_orig	lib%{name}
-%define	major		2
-%define	libname		%mklibname %{name} %{major}
-%define	devname		%mklibname -d %{name}
-# hacky workaround to be fixed!
-%define __noautoreq '/usr/bin/tclsh8.6'
+%define         _disable_ld_no_undefined   1
 
-%define tcl_sitelib_spaced %(echo %tcl_sitelib | sed -e 's,/, ,g')
+%define         major              2
+%define         libname            %mklibname %{name} %{major}
+%define         devname            %mklibname -d %{name}
 
-Name:		torque
-Version:	3.0.5
-Release:	5
-Summary:	The Portable Batch System
-Group:		System/Cluster
-License:	OpenPBS
-URL:		http://www.clusterresources.com/products/torque-resource-manager.php
-Source0:	http://www.adaptivecomputing.com/resources/downloads/torque/torque-%{version}.tar.gz
-Source1:	pbs_server
-Source2:	pbs.conf
-Source3:	TORQUE_Administrator_GUIDE.pdf
-Source4:	pbs_mom
-Source5:	pbs_sched
-Source6:	xpbs
-Source7:	xpbsmon
-Source8:	tclIndex_xpbsmon
-Source9:	tclIndex_xpbs
-Source10:	introduction_openPBS
-Source11:	xtermPBSlog
-Source12:	pbs
-Source13:	setup_pbs_server
-Source14:	pbs_config.sample
-Source15:	pbs_para_job.sh
-Source17:	pbs-epilogue
-Source18:	pbs-prologue
-Source19:	setup_pbs_client
-Source100:	torque.rpmlintrc
-Patch13:	torque-2.1.11-destdir.patch
-Patch14:	torque-2.3.7-tcl86.patch
-BuildRequires:	tk >= 8.3 pkgconfig(tk) >= 8.3 
-BuildRequires:	tcl >= 8.3 tcl-devel >= 8.3
-BuildRequires:	openssh openssh-clients
-BuildRequires:	pkgconfig(libtirpc)
-BuildRequires: 	pkgconfig(xmu)
-BuildRequires:	readline-devel
-BuildRequires:	pkgconfig(xscrnsaver)
-Requires:	openssh-clients >= 2.9
-Provides:	OpenPBS
-Obsoletes:	OpenPBS
-Requires(post):	rpm-helper
-Requires(preun): rpm-helper
+%define         clientname         %{name}-client
+%define         servername         %{name}-server
+%define         schedname          %{name}-sched
+%define         momname            %{name}-mom
+%define         guiname            %{name}-gui
+
+
+#default is /var/spool/torque: if you change this, you'll break some
+#scripts coming along with the source files
+%define         torquedir          /var/spool/torque
+%define         srcversion         %{version}
+
+Name:           torque
+Summary:        The Torque resource and queue manager
+Group:          System/Cluster
+Version:        6.1.2
+Release:        %mkrel 3
+License:        TORQUEv1.1
+URL:            http://www.adaptivecomputing.com/products/open-source/torque/
+
+Source0:        %{name}-%{srcversion}.tar.gz
+Source1:        mom_config
+Source2:        README.omv
+Source3:        pbs_mom.service
+Source4:        pbs_sched.service
+Source5:        pbs_server.service
+Source6:        trqauthd.service
+Source7:        torque_addport
+Source8:        torque_createdb
+Source9:        openmp.pbs
+Patch1:         torque-6.1.1.1-gcc7.patch
+
+BuildRequires:  bison
+BuildRequires:  flex
+BuildRequires:  groff
+BuildRequires:  groff-for-man
+BuildRequires:  xauth
+BuildRequires:  gperf
+BuildRequires:  doxygen
+BuildRequires:  pkgconfig(ncurses)
+BuildRequires:  pkgconfig(tk)
+BuildRequires:  pkgconfig(tcl)
+BuildRequires:  openssh-clients
+BuildRequires:  readline-devel
+BuildRequires:  gcc-gfortran
+BuildRequires:  gcc-c++
+%ifarch %ix86 x86_64 znver1
+BuildRequires:  quadmath-devel
+%endif
+BuildRequires:  pam-devel
+BuildRequires:  pkgconfig(openssl)
+BuildRequires:  pkgconfig(libxml-2.0)
+BuildRequires:  pkgconfig(hwloc)
+BuildRequires:  boost-devel
+
+Requires:       openssh-clients
+Recommends:     torque-mom
 
 %description
-The Portable Batch System (PBS) is a flexible batch software
-processing system developed at NASA Ames Research Center. It 
-operates on networked, multi-platform UNIX environments, 
-including heterogeneous clusters of workstations, supercomputers,
-and massively parallel systems.
+The Tera-scale Open-source Resource and QUEue manager provides control
+over batch jobs and distributed computing resources. It is an advanced
+open-source product based on the original PBS project* and
+incorporates the best of both community and professional
+development. It incorporates significant advances in the areas of
+scalability, reliability, and functionality and is currently in use at
+tens of thousands of leading government, academic, and commercial
+sites throughout the world. Please check out the README.mga file provided in
+%{_docdir}/%{name} for setting up a minimal running system.
 
-"This product includes software developed by NASA Ames Research 
-Center, Lawrence Livermore National Laboratory, and Veridian 
-Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
-software support,products, and information."
+"TORQUE is a modification of OpenPBS which was developed by NASA Ames
+Research Center, Lawrence Livermore National Laboratory, and Veridian
+Information Solutions, Inc. Visit www.clusterresources.com/products/
+for more information about TORQUE and to download TORQUE".
 
-%package -n	%{libname}
-Summary:	Library for %{name}
-Group:		System/Libraries
 
-%description -n	%{libname}
-Library for %{name}.
 
-%package -n	%{devname}
-Summary:	The Portable Batch System (PBS) devel
-Group:		Development/Other
-Requires:	%{libname} = %{version}
-Provides:	%{_lib}%{name}1-devel = %{version}-%{release}
-Obsoletes:	%{_lib}%{name}1-devel
-Provides:	lib%{name}-devel = %{version}-%{release}
-Provides:	%{name}-devel = %{version}-%{release}
+%package -n     %{libname}
+Summary:        Shared libraries for Torque
+Group:          System/Libraries
+Provides:       lib%{name} = %{version}-%{release}
+
+%description -n %{libname}
+%{summary}.
+
+
+
+%package -n     %{devname}
+Summary:        Development files for Torque
+Group:          Development/Other
+Requires:       %{libname} = %{version}-%{release}
+Provides:       lib%{name}-devel  = %{version}-%{release}
+Provides:       %{name}-devel = %{version}-%{release}
 
 %description -n %{devname}
-The Portable Batch System (PBS) function prototype.
-"This product includes software developed by NASA Ames Research 
-Center, Lawrence Livermore National Laboratory, and Veridian 
-Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
-software support,products, and information."
+%{summary}.
 
-%package	client
-Summary:	The Portable Batch System (PBS) client
-Requires:	openssh-clients >= 2.9
-Group:		System/Cluster
-Provides:	OpenPBS-client
-Obsoletes:	OpenPBS-client
-Requires(post):	rpm-helper
+
+
+%package -n    %{clientname}
+Summary:        Command line utilities for Torque
+Group:          System/Cluster
+Requires:       %{libname} = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
+
+%description -n %{clientname}
+%{summary}.
+
+
+%package -n     %{servername}
+Summary:        The Torque server
+Group:          System/Cluster
+Requires:       %{libname} = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
+Recommends:     %{schedname} = %{version}-%{release}
+Requires(post): rpm-helper
 Requires(preun):rpm-helper
 
-%description	client
-The Portable Batch System (PBS) client.
-"This product includes software developed by NASA Ames Research 
-Center, Lawrence Livermore National Laboratory, and Veridian 
-Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
-software support,products, and information."
+%description -n %{servername}
+%{summary}.
 
-%package	xpbs
-Requires:	tk >= 8.3, tcl >= 8.3, %{name}-client = %{version}-%{release}
-Summary:	The Portable Batch System (PBS) X interface 
-Group:		Monitoring
-Provides:	OpenPBS-xpbs
-Obsoletes:	OpenPBS-xpbs
 
-%description	xpbs
-The Portable Batch System (PBS) X interface.
-"This product includes software developed by NASA Ames Research 
-Center, Lawrence Livermore National Laboratory, and Veridian 
-Information Solutions, Inc. Visit www.OpenPBS.org for OpenPBS 
-software support,products, and information."
+
+%package -n     %{schedname}
+Summary:        The scheduler for Torque server
+Group:          System/Cluster
+Requires:       %{libname} = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
+Requires:       %{servername} = %{version}-%{release}
+Requires(post): rpm-helper
+Requires(preun):rpm-helper
+
+%description -n %{schedname}
+%{summary}.
+
+
+
+%package -n     %{momname}
+Summary:        Node manager programs for Torque
+Group:          System/Cluster
+Requires:       %{libname} = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
+Requires:       openssh-server
+Requires(post): rpm-helper
+Requires(preun):rpm-helper
+
+%description -n %{momname}
+%{summary}.
+
+
+
+%package -n     %{guiname}
+Summary:        Graphical clients for Torque
+Group:          Monitoring
+Requires:       tk
+Requires:       tcl
+Requires:       %{libname} = %{version}-%{release}
+Requires:       %{name} = %{version}-%{release}
+Requires:       %{name}-client = %{version}-%{release}
+Obsoletes:      torque-xpbs <= 2.5.3
+
+%description -n %{guiname}
+%{summary}.
+
 
 %prep
-%setup -q
-%patch13 -p1 -b .destdir~
-%patch14 -p1 -b .tcl86~
-
-# these variables aren't ever set in any file that gets installed,
-# so without doing this, xpbs won't run - AdamW 2008/12
-sed -i -e 's,$xpbs_datadump,xpbs_datadump,g' src/gui/pbs.tcl
-sed -i -e 's,$xpbs_scriptload,xpbs_scriptload,g' src/gui/pbs.tcl
-
-cp %{SOURCE3} %{_builddir}/%{name}-%{version}/TORQUE_Administrator_GUIDE.pdf
-cp %{SOURCE10} %{_builddir}/%{name}-%{version}/introduction_openPBS
-cp %{SOURCE15} %{_builddir}/%{name}-%{version}/para_job_pbs.sh
-
-%pre 
-/usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
-# /usr/sbin/useradd -g pbs -d %{pbs_user} -r -s /bin/bash -p "" -m >/dev/null 2>&1 ||:
-
-%pre client
-/usr/sbin/groupadd -g 12386 -r -f pbs > /dev/null 2>&1 ||:
+%setup -q -n %{name}-%{srcversion}
+%autopatch -p1
 
 %build
-CFLAGS="%{optflags} -std=gnu99" \
-%configure \
-	--with-rcp=scp \
-	--with-server-home=/var/spool/pbs \
-	--enable-docs \
-	--enable-server \
-	--enable-mom \
-	--enable-client \
-	--srcdir=%{_builddir}/%{name}-%{version} \
-	--enable-gui \
-	-x-libraries=%{_libdir}
-	
-%ifarch x86_64
-	perl -pi -e 's|\-L\$\(TCL\_DIR\)/lib|\-L\$\(TCL\_DIR\)/lib64|g' src/tools/Makefile
-%endif 
+autoreconf -fi
+# -fpermissive added to downgrade numerous 'invalid conversion' errors to warnings
+export CPPFLAGS="-DUSE_INTERP_RESULT -DUSE_INTERP_ERRORLINE -DHAVE_STDBOOL_H -fpermissive"
+export CC=gcc
+export CXX=g++
 
-#make depend
-make clean
-%make all XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
+%configure \
+                --srcdir=%{_builddir}/%{name}-%{srcversion} \
+                --includedir=%{_includedir}/%{name} \
+                --with-pam=%{_libdir}/security \
+                --with-rcp=scp \
+                --with-hwloc-path=%{_prefix} \
+                --enable-docs \
+                --enable-server \
+                --enable-mom \
+                --enable-client \
+                --enable-drmaa \
+                --enable-high-availability \
+                --enable-syslog \
+                --enable-gui \
+                --disable-static \
+                --with-default-server=MYSERVERNAME \
+		--enable-autorun \
+                --enable-cpuset \
+                --without-debug
+#                --enable-nvidia-gpus
+#                --enable-numa-support
+
+
+%make_build all \
+                XPBS_DIR=%{tcl_sitelib}/xpbs \
+                XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
+
 
 %install
-pbs_server_home_for_install=%{buildroot}/var/spool/pbs
+%make_install \
+                PBS_SERVER_HOME=%{torquedir} \
+                mandir=%_mandir \
+                XPBS_DIR=%{tcl_sitelib}/xpbs \
+                XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
 
-mkdir -p %{buildroot}%{_initrddir}
-mkdir -p ${pbs_server_home_for_install}/mom_priv/
-touch ${pbs_server_home_for_install}/mom_priv/config
-mkdir -p ${pbs_server_home_for_install}/sched_priv
-chmod 644 ${pbs_server_home_for_install}/mom_priv/config
-mkdir -p ${pbs_server_home_for_install}/server_logs
-mkdir -p ${pbs_server_home_for_install}/sched_logs
-mkdir -p ${pbs_server_home_for_install}/server_priv
 
-mkdir -p %{buildroot}%{_defaultdocdir}
-mkdir -p %{buildroot}%{_sysconfdir}
-mkdir -p %{buildroot}%{_sbindir}
-mkdir -p %{buildroot}%{tcl_sitelib}/xpbs
-mkdir -p %{buildroot}%{tcl_sitelib}/xpbsmon
-mkdir -p %{buildroot}%{_libdir}/%{name}-%{version}
-mkdir -p %{buildroot}%{_defaultdocdir}/%{name}-%{version}
-mkdir -p %{buildroot}%{_defaultdocdir}/%{name}-client-%{version}
-mkdir -p %{buildroot}%{_includedir}/%{name}-%{version}
+find %{buildroot}%{_libdir} -name *.la -delete
 
-install -m755 %{SOURCE1} %{buildroot}%{_initrddir}/pbs_server
-install -m755 %{SOURCE4} %{buildroot}%{_initrddir}/pbs_mom
-install -m755 %{SOURCE5} %{buildroot}%{_initrddir}/pbs_sched
-install -m755 %{SOURCE12} %{buildroot}%{_initrddir}/openpbs
-install -m644 %{SOURCE2} %{buildroot}%{_sysconfdir}/pbs.conf
-install -m644 %{SOURCE11} %{buildroot}%{_sbindir}/pbslogs
+#yields various service to fail if relative symlinks
+export DONT_RELINK=1
 
-%makeinstall_std PBS_SERVER_HOME=/var/spool/pbs mandir=%{_mandir} XPBS_DIR=%{tcl_sitelib}/xpbs XPBSMON_DIR=%{tcl_sitelib}/xpbsmon
+#install starting scripts
+%__mkdir_p %{buildroot}%{_unitdir}
+install -p -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/pbs_mom.service
+install -p -m 644 %{SOURCE4} %{buildroot}%{_unitdir}/pbs_sched.service
+install -p -m 644 %{SOURCE5} %{buildroot}%{_unitdir}/pbs_server.service
+install -p -m 644 %{SOURCE6} %{buildroot}%{_unitdir}/trqauthd.service
 
-mkdir -p %{buildroot}%{_sbindir}
-chmod 755 %{buildroot}%{_sbindir}/pbs_mom
-chmod 755 %{buildroot}%{_sbindir}/pbs_sched
-chmod 755 %{buildroot}%{_sbindir}/pbs_iff
-chmod 755 %{buildroot}%{_sbindir}/pbs_server
-chmod 755 %{buildroot}%{_initrddir}/openpbs
+%__rm -f %{buildroot}%{_sysconfdir}/init.d/pbs_mom
+%__rm -f %{buildroot}%{_sysconfdir}/init.d/pbs_server
+%__rm -f %{buildroot}%{_sysconfdir}/init.d/trqauthd
 
-# needed to overwrite bad path in those scripts
-install -m755 %{SOURCE6} %{buildroot}%{_bindir}/xpbs
-install -m755 %{SOURCE7} %{buildroot}%{_bindir}/xpbsmon
-install -m755 %{SOURCE13} %{buildroot}%{_bindir}/setup_pbs_server
-install -m755 %{SOURCE19} %{buildroot}%{_bindir}/setup_pbs_client
-install -m644 %{SOURCE8} %{buildroot}%{tcl_sitelib}/xpbsmon/tclIndex
-install -m644 %{SOURCE9} %{buildroot}%{tcl_sitelib}/xpbs/tclIndex
-install -m644 %{SOURCE14} %{buildroot}%{_var}/spool/pbs/pbs_config.sample
-install -m755 %{SOURCE17} %{buildroot}%{_var}/spool/pbs/mom_priv/epilogue
-install -m755 %{SOURCE18} %{buildroot}%{_var}/spool/pbs/mom_priv/prologue
+#end starting scripts
 
-# replace the placeholder text with whatever the real tcl_sitelib
-# should be...cunning, eh? - AdamW 2008/12
-sed -i -e 's,TCL_SITELIB,%{tcl_sitelib},g' \
-%{buildroot}%{tcl_sitelib}/xpbsmon/tclIndex \
-%{buildroot}%{tcl_sitelib}/xpbs/tclIndex \
-%{buildroot}%{_bindir}/xpbs \
-%{buildroot}%{_bindir}/xpbsmon \
-%{buildroot}%{_bindir}/setup_pbs_server \
-%{buildroot}%{_bindir}/setup_pbs_client
+#install configuration scripts
+install -p -m 755 %{SOURCE7} %{buildroot}%{_sbindir}/torque_addport
+install -p -m 755 %{SOURCE8} %{buildroot}%{_sbindir}/torque_createdb
+#end configuration scripts
 
-rm -f %{buildroot}%{_libdir}/xpbs/tclIndex
-rm -f %{buildroot}%{_libdir}/xpbsmon/tclIndex
 
-echo "# MOM server configuration file" > ${pbs_server_home_for_install}/mom_priv/config
-echo "# if more than one value, separate it by comma." >> ${pbs_server_home_for_install}/mom_priv/config
 
-cp -av %{_builddir}/%{name}-%{version}/src/include/* %{buildroot}%{_includedir}/%{name}-%{version}/
+#install config files: move them to /etc/torque
+%__mkdir_p %{buildroot}%{_sysconfdir}/%{name}
+pushd %{buildroot}%{torquedir}
+%__mv server_name     %{buildroot}%{_sysconfdir}/%{name}
+%__ln_s               %{_sysconfdir}/%{name}/server_name .
+popd
 
-perl -pi -e 's/wish8\.3/wish/' %{buildroot}%{_bindir}/xpbs
+pushd %{buildroot}%{torquedir}/server_priv
+%__mv nodes %{buildroot}%{_sysconfdir}/%{name}
+%__ln_s     %{_sysconfdir}/%{name}/nodes .
+popd
 
-%multiarch_includes %{buildroot}%{_includedir}/%{name}-%{version}/pbs_config.h
+pushd %{buildroot}%{torquedir}/sched_priv
+%__mv sched_config   %{buildroot}%{_sysconfdir}/%{name}
+%__mv dedicated_time %{buildroot}%{_sysconfdir}/%{name}
+%__mv holidays       %{buildroot}%{_sysconfdir}/%{name}
+%__mv resource_group %{buildroot}%{_sysconfdir}/%{name}
+%__ln_s               %{_sysconfdir}/%{name}/sched_config .
+%__ln_s               %{_sysconfdir}/%{name}/dedicated_time .
+%__ln_s               %{_sysconfdir}/%{name}/holidays .
+%__ln_s               %{_sysconfdir}/%{name}/resource_group .
+popd
+
+install -p -m 644 %{SOURCE1} %{buildroot}%{_sysconfdir}/%{name}
+pushd %{buildroot}%{torquedir}/mom_priv
+%__ln_s %{_sysconfdir}/%{name}/mom_config config
+
+
+popd
+#end config files
+
+
+#move drmaa man to the right place and install docs
+##__mv #{buildroot}#{_defaultdocdir}/torque-drmaa/man/man3/* #{buildroot}#{_mandir}/man3/.
+install -D -m 644 %{SOURCE2} %{buildroot}%{_docdir}/%{name}/README.mga
+install -D -m 644 %{SOURCE9} %{buildroot}%{_docdir}/%{name}/openmp.pbs
+
+#make symbolic links for tcl
+pushd %{buildroot}%{_libdir}
+%__ln_s %{tcl_sitelib}/xpbs    .
+%__ln_s %{tcl_sitelib}/xpbsmon .
+popd
+
+
+#clean make install bugs the dirty way...
+%__rm -f %{buildroot}%{_mandir}/man1/basl2c.1*
+#__rm -f #{buildroot}#{_mandir}/man3/_*src_drmaa_src_.3*
+
+
+
 
 %post
-#!/bin/sh
-pbs_prefix=%{_prefix}
-pbs_server_home=/var/spool/pbs
-if [ -f "${pbs_server_home}/server_name" ]; then
-        echo `hostname` > ${pbs_server_home}/server_name
-fi
-#if [ ! -f "${pbs_server_home}/default_server" ] ; then
-#        echo "# <server hostname>" > ${pbs_server_home}/default_server
-#fi
-if [ -f "${pbs_server_home}/default_server" ]; then
-        echo `hostname` >> ${pbs_server_home}/default_server
-fi
-if [ ! -f "${pbs_server_home}/server_priv/nodes" ]; then
-	echo `hostname` > ${pbs_server_home}/server_priv/nodes
-fi
+#update of /etc/services if needed
+%{_sbindir}/torque_addport
+sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{_sysconfdir}/%{name}/server_name
 
-# add pbs service
-%_post_service pbs_server
-# %_post_service pbs_sched
 
-# mise a jour /etc/services if needed
-CHECK_PORT=`grep 15003 /etc/services`
-if [ -z "$CHECK_PORT" ]; then
-	cat >> /etc/services << EOF
-# Port needed by PBS
-pbs_server	15001/tcp	# pbs server
-pbs_mom		15002/tcp	# mom to/from server
-pbs_resmon	15003/tcp   # mom resource management requests
-pbs_resmon      15003/udp   # mom resource management requests
-pbs_sched	15004/tcp   # scheduler 
-EOF
-fi
-	
-%post client
+%post -n %{momname}
 %_post_service pbs_mom
+sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{_sysconfdir}/%{name}/mom_config
 
-%post xpbs
-ln -sf %{tcl_sitelib}/xpbs /usr/lib/xpbs
-ln -sf %{tcl_sitelib}/xpbsmon /usr/lib/xpbsmon
-
-%preun
-%_preun_service pbs_server
-
-%preun client
+%preun -n %{momname}
 %_preun_service pbs_mom
 
+%post -n %{servername}
+#create serverdb if needed
+%{_sbindir}/torque_createdb %{torquedir} %{_sbindir}/pbs_server
+sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
+%_post_service pbs_server
+
+%preun -n %{servername}
+%_preun_service pbs_server
+
+%post -n %{schedname}
+%_post_service pbs_sched
+
+%preun -n %{schedname}
+%_preun_service pbs_sched
+
+%post -n %{clientname}
+%_post_service trqauthd
+
+%preun -n %{clientname}
+%_preun_service trqauthd
+
+
+
 %files
-%doc doc/READ_ME
-%{_mandir}/man1/pbs*
-%{_mandir}/man3/pbs*
-%{_mandir}/man7/*
-%{_mandir}/man8/pbsnodes*
-%{_mandir}/man8/pbs_server.8*
-%{_mandir}/man8/pbs_sch*
-%config(noreplace) %{_sysconfdir}/pbs.conf
-%defattr(755, root, root)
-%{_initrddir}/pbs_server
-%{_initrddir}/pbs_sched
-%{_initrddir}/openpbs
-%{_sbindir}/pbs_server
-%{_sbindir}/pbs_sched
-%{_sbindir}/pbslogs
-%{_sbindir}/qnoded
-%{_sbindir}/qschedd
-%{_sbindir}/qserverd
-%{_bindir}/pbs_track
-%{_bindir}/pbsnodes
-%{_bindir}/setup_pbs_server
+%doc PBS_License.txt Release_Notes README.torque
+%doc README.NUMA README.trqauthd README.array_changes
+%{_docdir}/%{name}/README.mga
+%{_docdir}/%{name}/openmp.pbs
+%dir %{torquedir}
+%dir %{torquedir}/checkpoint
+%dir %{torquedir}/aux
+%dir %{torquedir}/spool
+%dir %{torquedir}/undelivered
+%dir %{_sysconfdir}/%{name}
+%config(noreplace) %{_sysconfdir}/%{name}/server_name
+%config(noreplace) %{_sysconfdir}/ld.so.conf.d/torque.conf
+%config(noreplace) %{_sysconfdir}/profile.d/torque.*
+%{_sbindir}/torque_addport
+%{torquedir}/server_name
+%{torquedir}/pbs_environment
+%{_libdir}/security/pam*
+%{_mandir}/man1/pbs.1.*
+
+
+
+%files -n %{libname}
+%doc CHANGELOG README.coding_notes README.building_40 README.configure
+%{_libdir}/*.so.*
+
+
+
+%files -n %{devname}
+%doc 
+%dir %{_includedir}/%{name}
+%{_includedir}/%{name}/*
 %{_bindir}/pbs-config
-%{_bindir}/printtracking
-%{_bindir}/printserverdb
+%{_libdir}/*.so
+%{_defaultdocdir}/torque-drmaa
+%{_mandir}/man3/pbs_*.3*
+#{_mandir}/man3/rpp.3*
+%{_mandir}/man3/tm.3*
+#{_mandir}/man3/drmaa.3*
+#{_mandir}/man3/drmaa_*.3*
 
-%{_var}/spool/pbs/sched_logs/
-%dir %{_var}/spool/pbs
-%{_var}/spool/pbs/sched_priv
-%{_var}/spool/pbs/server_logs/
-%{_var}/spool/pbs/checkpoint/
-%{_var}/spool/pbs/server_priv/
-%attr(775,root,pbs) %{_var}/spool/pbs/spool/
-%attr(1777,root,pbs) %{_var}/spool/pbs/undelivered/
-%config(noreplace) %{_var}/spool/pbs/pbs_environment
-%config(noreplace) %{_var}/spool/pbs/server_name
-%{_var}/spool/pbs/pbs_config.sample
 
-%files client
-%doc introduction_openPBS para_job_pbs.sh TORQUE_Administrator_GUIDE.pdf 
-%{_mandir}/man1/q*
-%{_mandir}/man8/q*
-%{_mandir}/man8/pbs_mom.8*
-%{_mandir}/man1/bas*
-%{_mandir}/man1/nqs*
-%dir %{_var}/spool/pbs
-%{_var}/spool/pbs/mom_logs
-%{_var}/spool/pbs/mom_priv
-%{_var}/spool/pbs/aux
-%{_var}/spool/pbs/checkpoint
-%attr(1777,root,pbs) %{_var}/spool/pbs/undelivered
-%attr(775,root,pbs) %{_var}/spool/pbs/spool
-%{_bindir}/q*
+
+%files -n %{clientname}
+%doc
+%{_unitdir}/trqauthd.service
+%{_sbindir}/trqauthd
+%{_bindir}/qa*
+%{_bindir}/qc*
+%{_bindir}/qdel
+%{_bindir}/qg*
+%{_bindir}/qh*
+%{_bindir}/qm*
+%{_bindir}/qo*
+%{_bindir}/qrerun
+%{_bindir}/qrls
+%{_bindir}/qsub
+%{_bindir}/qstat
+%{_bindir}/qsig
+%{_bindir}/qselect
 %{_bindir}/chk_tree
 %{_bindir}/hostn
 %{_bindir}/nqs2pbs
-%{_bindir}/printjob
-%{_bindir}/tracejob
+%{_bindir}/pbsnodes
+%{_bindir}/qnodes
 %{_bindir}/pbsdsh
-%{_bindir}/setup_pbs_client
+%{_bindir}/qterm
+%{_bindir}/qstop
+%{_bindir}/qstart
+%{_bindir}/qdisable
+%{_bindir}/qenable
+%{_bindir}/qrun
+%{_mandir}/man1/q*.1*
+%{_mandir}/man1/nqs2pbs.1*
+%{_mandir}/man1/pbsdsh.1*
+#{_mandir}/man3/jobs.3*
+%{_mandir}/man7/pbs_*.7*
+%{_mandir}/man8/pbsnodes.8*
+%{_mandir}/man8/q*.8*
+
+
+
+%files -n %{servername}
+%dir %{torquedir}/server_priv
+%dir %{torquedir}/server_priv/acl_svr
+%dir %{torquedir}/server_priv/acl_groups
+%dir %{torquedir}/server_priv/acl_hosts
+%dir %{torquedir}/server_priv/acl_users
+%dir %{torquedir}/server_priv/accounting
+%dir %{torquedir}/server_priv/arrays
+%dir %{torquedir}/server_priv/credentials
+%dir %{torquedir}/server_priv/disallowed_types
+%dir %{torquedir}/server_priv/hostlist
+%dir %{torquedir}/server_priv/jobs
+%dir %{torquedir}/server_priv/queues
+%config(noreplace) %{_sysconfdir}/%{name}/nodes
+%{torquedir}/server_priv/nodes
+%{_unitdir}/pbs_server.service
+%{_sbindir}/torque_createdb
+%{_sbindir}/pbs_server
+%{_sbindir}/qserverd
+%{_bindir}/pbs_track
+%{_bindir}/tracejob
+%{_bindir}/printjob
+%{_bindir}/printserverdb
+%{_bindir}/printtracking
+%{_mandir}/man8/pbs_server.8*
+
+
+
+
+%files -n %{schedname}
+%dir %{torquedir}/sched_priv
+%dir %{torquedir}/sched_priv/accounting
+%dir %{torquedir}/sched_logs
+%config(noreplace) %{_sysconfdir}/%{name}/sched_config 
+%config(noreplace) %{_sysconfdir}/%{name}/dedicated_time 
+%config(noreplace) %{_sysconfdir}/%{name}/holidays 
+%config(noreplace) %{_sysconfdir}/%{name}/resource_group
+%{torquedir}/sched_priv/sched_config
+%{torquedir}/sched_priv/dedicated_time
+%{torquedir}/sched_priv/holidays
+%{torquedir}/sched_priv/resource_group
+%{_unitdir}/pbs_sched.service
+%{_sbindir}/pbs_sched
+%{_sbindir}/qschedd
+%{_mandir}/man8/pbs_sched*.8*
+
+
+
+
+%files -n %{momname}
+%doc
+%dir %{torquedir}/mom_priv
+%dir %{torquedir}/mom_priv/jobs
+%dir %{torquedir}/mom_logs
+%config(noreplace) %{_sysconfdir}/%{name}/mom_config
+%{torquedir}/mom_priv/config
+%{_unitdir}/pbs_mom.service
+%{_sbindir}/pbs_mom
+%{_sbindir}/qnoded
 %{_sbindir}/momctl
 %{_sbindir}/pbs_demux
-%attr(4755,root,root) %{_sbindir}/pbs_iff
-%{_sbindir}/pbs_mom
-%{_initrddir}/pbs_mom
+%{_mandir}/man8/pbs_mom.8*
 
-%files -n %{libname}
-%{_libdir}/*.so.%{major}*
 
-%files -n %{devname}
-%{_libdir}/*.so
-%{_mandir}/man3/tm*
-%{_mandir}/man3/rpp.3.*
-%{_includedir}/%{name}-%{version}
-%{_includedir}/*.h
-%{multiarch_includedir}/%{name}-%{version}/pbs_config.h
 
-%files xpbs
-%{_bindir}/pbs_tclsh
+
+%files -n %{guiname}
+%{_bindir}/xpbs*
 %{_bindir}/pbs_wish
-%{_bindir}/xpbsmon
-%{_bindir}/xpbs
-%dir %{tcl_sitelib}/xpbs/bitmaps
-%{tcl_sitelib}/xpbs/bitmaps/*
-%dir %{tcl_sitelib}/xpbs/help
-%{tcl_sitelib}/xpbs/help/*
-%dir %{tcl_sitelib}/xpbs/bin
-%{tcl_sitelib}/xpbs/bin/*
-%{tcl_sitelib}/xpbs/preferences.tcl
-%{tcl_sitelib}/xpbs/pbs.tcl
-%{tcl_sitelib}/xpbs/*.tk
-%{tcl_sitelib}/xpbs/tclIndex
-%config(noreplace) %{tcl_sitelib}/xpbs/xpbsrc
-%{tcl_sitelib}/xpbs/buildindex
-%{tcl_sitelib}/xpbsmon/buildindex
-%{tcl_sitelib}/xpbsmon/*.tk
-%dir %{tcl_sitelib}/xpbsmon/help
-%{tcl_sitelib}/xpbsmon/*.tcl
-%{tcl_sitelib}/xpbsmon/tclIndex
-%config(noreplace) %{tcl_sitelib}/xpbsmon/xpbsmonrc
-%dir %{tcl_sitelib}/xpbsmon
-%dir %{tcl_sitelib}/xpbsmon/bitmaps
-%{tcl_sitelib}/xpbsmon/bitmaps/*
-%{tcl_sitelib}/xpbsmon/help/*
-%{_mandir}/man1/x*
+%{_bindir}/pbs_tclsh
+%{tcl_sitelib}/xpbs
+%{tcl_sitelib}/xpbsmon
+%{_libdir}/xpbs
+%{_libdir}/xpbsmon
+%{_mandir}/man1/xpbs*.1*
+
+
+
+%changelog
+* Tue Oct 02 2018 umeabot <umeabot> 6.1.2-3.mga7
+  (not released yet)
++ Revision: 1315191
+- Mageia 7 Mass Rebuild
+
+* Fri Jun 22 2018 daviddavid <daviddavid> 6.1.2-2.mga7
++ Revision: 1238868
+- rebuild for new hwloc 2.0.1
+
+* Thu Mar 15 2018 eatdirt <eatdirt> 6.1.2-1.mga7
++ Revision: 1209597
+- Upgrade to version 6.1.2
+
+* Tue Jan 02 2018 wally <wally> 6.1.1.1-3.mga7
++ Revision: 1189478
+- rebuild for new readline
+
+* Fri Oct 13 2017 cjw <cjw> 6.1.1.1-2.mga7
++ Revision: 1171667
+- fix build with gcc 7
+
+* Tue May 02 2017 eatdirt <eatdirt> 6.1.1.1-1.mga6
++ Revision: 1098469
+- Upgrade to version 6.1.1.1
+
+* Tue Mar 07 2017 eatdirt <eatdirt> 6.1.0-2.mga6
++ Revision: 1089505
+- Rebuild for new hwloc
+
+* Fri Dec 02 2016 eatdirt <eatdirt> 6.1.0-1.mga6
++ Revision: 1071705
+- Upgrade to latest stable version 6.1.0
+
+* Fri Apr 01 2016 eatdirt <eatdirt> 6.0.1-1.mga6
++ Revision: 997378
+- Upgrade to version 6.0.1
+
+* Wed Feb 17 2016 umeabot <umeabot> 5.1.1.2-3.mga6
++ Revision: 963091
+- Mageia 6 Mass Rebuild
+
+* Mon Oct 05 2015 eatdirt <eatdirt> 5.1.1.2-2.mga6
++ Revision: 886494
+- Rebuild for new tcl8.6
+
+* Tue Sep 29 2015 eatdirt <eatdirt> 5.1.1.2-1.mga6
++ Revision: 885217
+- Upgrade to version 5.1.1.2
+
+* Sun Aug 16 2015 eatdirt <eatdirt> 4.2.10-1.mga6
++ Revision: 865142
+- Upgrade to version 4.2.10
+
+* Wed Oct 15 2014 umeabot <umeabot> 4.2.9-3.mga5
++ Revision: 744429
+- Second Mageia 5 Mass Rebuild
+
+* Thu Oct 09 2014 eatdirt <eatdirt> 4.2.9-2.mga5
++ Revision: 737662
+- Add scriptlet to set correct server name in config files
+
+* Sat Oct 04 2014 eatdirt <eatdirt> 4.2.9-1.mga5
++ Revision: 736714
+- Upgrade to 4.2.9, fix security issue CVE-201403684 (mga#14226)
+
+* Fri Sep 26 2014 tv <tv> 4.2.8-3.mga5
++ Revision: 725252
+- rebuild for bogus file deps
+
+* Tue Sep 16 2014 umeabot <umeabot> 4.2.8-2.mga5
++ Revision: 689926
+- Mageia 5 Mass Rebuild
++ tv <tv>
+- s/uggests:/Recommends:/
+
+* Fri Jun 06 2014 eatdirt <eatdirt> 4.2.8-1.mga5
++ Revision: 634180
+- Upgrade to version 4.2.8
+
+* Wed Mar 12 2014 eatdirt <eatdirt> 4.1.7-2.mga5
++ Revision: 602625
+- Fix bug in torque_createdb script
+- Add scripts for post install configuration (needed for systemd support)
++ philippem <philippem>
+- switch to systemd
+
+* Tue Feb 25 2014 eatdirt <eatdirt> 4.1.7-1.mga5
++ Revision: 597240
+- Upgrade to version 4.1.7
+
+* Thu Nov 14 2013 luigiwalser <luigiwalser> 4.1.6-4.mga4
++ Revision: 551153
+- add upstream patch to fix CVE-2013-4495
+- fix URL
+
+* Mon Oct 21 2013 umeabot <umeabot> 4.1.6-3.mga4
++ Revision: 540672
+- Mageia 4 Mass Rebuild
+
+* Wed Oct 09 2013 luigiwalser <luigiwalser> 4.1.6-2.mga4
++ Revision: 494195
+- add upstream patch to fix CVE-2013-4319
+
+* Mon Jul 01 2013 eatdirt <eatdirt> 4.1.6-1.mga4
++ Revision: 449456
+- Fixing missing BR
+- Upgrade to version 4.1.6, cleaning spec file
+
+* Wed Apr 03 2013 eatdirt <eatdirt> 4.1.5.1-1.mga3
++ Revision: 407379
+- Upgrade to 4.1.5.1 (bugs fix release)
+
+* Mon Jan 14 2013 umeabot <umeabot> 4.1.4-2.mga3
++ Revision: 384682
+- Mass Rebuild - https://wiki.mageia.org/en/Feature:Mageia3MassRebuild
+
+* Tue Jan 08 2013 eatdirt <eatdirt> 4.1.4-1.mga3
++ Revision: 343214
+- Upgrade to version 4.1.4
++ rtp <rtp>
+- fix build-dep
+
+* Thu Nov 01 2012 eatdirt <eatdirt> 4.1.3-1.mga3
++ Revision: 312289
+- Upgrade to version 4.1.3
+
+* Sun Sep 02 2012 eatdirt <eatdirt> 4.1.1-1.mga3
++ Revision: 287155
+- Upgrading to branch 4.1.1
+
+* Sat Aug 25 2012 eatdirt <eatdirt> 2.5.12-2.mga3
++ Revision: 283811
+- Fixing missing Obsolete and Deps
+
+* Fri Aug 24 2012 eatdirt <eatdirt> 2.5.12-1.mga3
++ Revision: 283731
+- Upgrade to 2.5.12 (latest of branch 2), specfile rewritten from scratch
+
+* Sun Apr 29 2012 colin <colin> 2.5.3-4.mga2
++ Revision: 234229
+- Disable unused-but-set-variable error checks (breaks build)
+- Add LSB headers to initscripts (mga#5262)
+
+* Wed Jul 06 2011 fwang <fwang> 2.5.3-3.mga2
++ Revision: 119194
+- disable tcl 8.6 patch
+- br openssh-clients
+- rebuild for new tcl
+
+* Tue Jun 28 2011 ahmad <ahmad> 2.5.3-2.mga2
++ Revision: 115316
+- Drop the buildroot declaration
+- Drop old/unneeded scriptlets
+- imported package torque
+
+
+* Sun Nov 28 2010 Sandro Cazzaniga <kharec@mandriva.org> 2.5.3-1mdv2011.0
++ Revision: 602397
+- new version 2.5.3
+
+  + Lev Givon <lev@mandriva.org>
+    - Forgot to remove 2.4.5 tarball.
+
+* Mon May 10 2010 Antoine Ginies <aginies@mandriva.com> 2.4.8-1mdv2010.1
++ Revision: 544318
+- release 2.4.8
+
+* Tue Feb 09 2010 Antoine Ginies <aginies@mandriva.com> 2.4.5-1mdv2010.1
++ Revision: 502714
+- release 2.4.5
+
+  + Giuseppe Ghibò <ghibo@mandriva.com>
+    - Let Patch14 for TCL 8.6 conditional (needed for backporting over older tcl versions).
+
+* Thu Jul 23 2009 Per Øyvind Karlsen <peroyvind@mandriva.org> 2.3.7-1mdv2010.0
++ Revision: 398757
+- bump major
+- place library in it's own separate package rather than in the devel package
+- cleanups
+- regenerate P14
+- drop dead patches
+- new release: 2.3.7
+- add readline-devel to buildrequires
+- use %%configure2_5x macro
+- fix string format issues (P0)
+- regenarate P9, P13, P14
+- drop Prefix tag
+- drop unused patches
+- new release: 2.1.11
+
+* Sat Dec 06 2008 Adam Williamson <awilliamson@mandriva.org> 2.1.7-6mdv2009.1
++ Revision: 310969
+- rebuild for new tcl
+- install to new location per policy
+- make sure everything's on the same page with regards to /var/spool/pbs
+- fix a code bug that prevents xpbs running
+- add tcl86.patch (fix/kludge build for tcl 8.6)
+- fix a #%%define
+
+  + Thierry Vignaud <tv@mandriva.org>
+    - rebuild
+    - rebuild
+
+  + Pixel <pixel@mandriva.com>
+    - do not call ldconfig in %%post/%%postun, it is now handled by filetriggers
+
+* Fri Dec 21 2007 Olivier Blin <oblin@mandriva.com> 2.1.7-3mdv2008.1
++ Revision: 136550
+- restore BuildRoot
+
+  + Thierry Vignaud <tv@mandriva.org>
+    - kill re-definition of %%buildroot on Pixel's request
+    - buildrequires X11-devel instead of XFree86-devel
+    - kill packager tag
+
+* Fri Sep 07 2007 Anssi Hannula <anssi@mandriva.org> 2.1.7-3mdv2008.0
++ Revision: 82052
+- rebuild for new soname of tcl
+
+* Fri Jun 22 2007 Thierry Vignaud <tv@mandriva.org> 2.1.7-2mdv2008.0
++ Revision: 42958
+- uncompress a patch, thus fixing build
+- fix group
+
+
+* Tue Feb 27 2007 Olivier Thauvin <nanardon@mandriva.org> 2.1.7-1mdv2007.0
++ Revision: 126203
+- fix buildrequirements
+- clean up patch
+- fix path installation
+- 2.1.7
+
+  + Lev Givon <lev@mandriva.org>
+    - Import torque
+
+* Wed Jan 04 2006 Oden Eriksson <oeriksson@mandriva.com> 2.0.0-2mdk
+- rebuilt against soname aware deps (tcl/tk)
+- fix deps
+
+* Thu Nov 17 2005 Antoine Ginies <aginies@n3.mandriva.com> 2.0.0-1mdk
+- release 2.0.0p1
+
+* Thu Mar 17 2005 Antoine Ginies <aginies@mandrakesoft.com> 1.2.0-1mdk
+- release 1.2.0p1
+- fix acces to xpbs and xpbsmon
+
+* Tue Jun 22 2004 Erwan Velu <erwan@mandrakesoft.com> 1.1.0-1mdk
+- 1.1.0
+
+* Thu May 06 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-7mdk
+- Fixing wrong rights on /usr/include/torque
+
+* Thu Apr 22 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-6mdk
+- Adding Torque1.0.1p6-comment.diff
+
+* Tue Apr 20 2004 Erwan Velu <erwan@mandrakesoft.com> 1.0.1-5mdk
+- Release p6
+- Adding %%subrelease to builddir
+
+* Tue Mar 02 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-4mdk
+- Fix DIRM (distlint)
+- Fix dep wish8.3
+
+* Mon Mar 01 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-3mdk
+- fix -devel provides
+
+* Mon Mar 01 2004 Olivier Thauvin <thauvin@aerov.jussieu.fr> 1.0.1-2mdk
+- Provides/Obsoletes: PBS
+
