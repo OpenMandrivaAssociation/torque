@@ -1,0 +1,96 @@
+# This README file gives the minimal configuration steps to get a
+# running torque system on one OpenMandriva node which is both server and
+# computing node (See below for cluster-like systems). 
+
+# All configurations files are installed in /etc/torque and need
+# edition prior to be usable.
+#
+# The first file to edit is /etc/torque/nodes (a symlink to
+# /var/spool/torque/server_priv/nodes) such that it specifies where
+# the jobs can be run. For instance, if you want to allocate 2 cores
+# on a machine named host01, append to /etc/torque/nodes
+#
+# host01 np=2
+#
+# See /etc/torque/nodes for more tuned options.
+#
+#
+# Second, specify the name of the machine running the pbs_server in
+# /etc/torque/server_name (for instance MYSERVERNAME)
+#
+# Third, specify a valid hostname, or IP, to which the computing nodes
+# can connect to a server in /etc/torque/mom_config (e.g., MYSERVERNAME)
+#
+# Fourth, start the daemons, authorization, mom, server and schedulers
+
+systemctl start trqauthd.service
+systemctl start pbs_mom.service
+systemctl start pbs_server.service
+systemctl start pbs_sched.service
+
+# Check that they running fine with systemctl status foo.service. If
+# not, check again your configuration files above. Notice that the
+# server hostname should be fully qualified, namely hostname -f should
+# also return a domain. If not, certainly your /etc/hosts file
+# may miss some entries and/or your dns configuration may be
+# incomplete. Equally, check out that the communications between
+# pbs_mom and pbs_server are not screened by the router, firewall...
+# 
+#
+# Fifth, create a queue configuration using the queue manager
+# /usr/bin/qmgr. In the following example, we create a queue named
+# "openmp" in which each users may run 2 jobs, may queue 4 jobs and
+# only 2 jobs may run in total at the same time.
+
+# server attributes: switch on scheduling (by default scheduling is
+# disabled)
+
+qmgr -c "set server scheduling = true"
+qmgr -c "set server query_other_jobs=true"
+qmgr -c "set server default_queue = serial"
+
+# create the queue named "openmp", edit as needed
+
+qmgr -c "create queue openmp queue_type=execution"
+qmgr -c "set queue openmp started=true"
+qmgr -c "set queue openmp enabled=true"
+
+qmgr -c "set queue openmp max_user_run=2"
+qmgr -c "set queue openmp max_user_queuable=4"
+qmgr -c "set queue openmp max_running=8"
+qmgr -c "set queue openmp priority=0" 
+qmgr -c "set queue openmp resources_available.nodect=1"
+qmgr -c "set queue openmp resources_available.vmem=4gb"
+qmgr -c "set queue openmp resources_max.nodect=1"
+qmgr -c "set queue openmp resources_max.walltime=144:00:00"
+qmgr -c "set queue openmp resources_default.nodes=1"
+qmgr -c "set queue openmp resources_default.walltime=600"
+
+
+# Some checks
+# List the available queue:
+
+qstat -q
+
+# Submit a job to the openmp queue. Use the provided submission
+# scripts in /usr/share/doc/torque/openmp.pbs
+
+qsub openmp.pbs
+
+# Check that the job is running
+
+qstat
+
+# Good luck!
+
+#####################################################################
+# On cluster-like systems, the settings are almost identical up to the
+# splitting:
+#
+# mom services run on the computing nodes and /etc/torque/nodes should
+# refer to them only.
+#
+# server/scheduler do not run on the computing nodes but on
+# MYSERVERNAME for instance. On all computing nodes,
+# /etc/torque/mom_config should refer to MYSERVERNAME.
+# ####################################################################
