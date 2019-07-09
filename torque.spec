@@ -15,13 +15,13 @@
 #scripts coming along with the source files
 %define         torquedir          /var/spool/torque
 %define         srcversion         %{version}
-%bcond_without	gui
+%bcond_with	gui
 
 Name:           torque
 Summary:        The Torque resource and queue manager
 Group:          System/Cluster
 Version:        6.1.2
-Release:        %mkrel 3
+Release:        10
 License:        TORQUEv1.1
 URL:            http://www.adaptivecomputing.com/products/open-source/torque/
 
@@ -53,7 +53,7 @@ BuildRequires:  openssh-clients
 BuildRequires:  readline-devel
 BuildRequires:  gcc-gfortran
 BuildRequires:  gcc-c++
-%ifarch %ix86 x86_64 znver1
+%ifarch %ix86 %{x86_64}
 BuildRequires:  quadmath-devel
 %endif
 BuildRequires:  pam-devel
