@@ -62,6 +62,7 @@ BuildRequires:  pkgconfig(libxml-2.0)
 BuildRequires:  pkgconfig(hwloc)
 BuildRequires:  boost-devel
 BuildRequires:  glibc-static-devel
+BuildRequires:  glibc-devel
 
 Requires:       openssh-clients
 Recommends:     torque-mom
