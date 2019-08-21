@@ -159,7 +159,6 @@ Requires(preun):rpm-helper
 
 
 
-%if %{with gui}
 %package -n     %{guiname}
 Summary:        Graphical clients for Torque
 Group:          Monitoring
@@ -172,7 +171,6 @@ Obsoletes:      torque-xpbs <= 2.5.3
 
 %description -n %{guiname}
 %{summary}.
-%endif
 
 %prep
 %setup -q -n %{name}-%{srcversion}
@@ -198,9 +196,6 @@ export CXX=g++
                 --enable-drmaa \
                 --enable-high-availability \
                 --enable-syslog \
-%if %{with gui}
-                --enable-gui \
-%endif
                 --disable-static \
                 --with-default-server=MYSERVERNAME \
 		--enable-autorun \
@@ -284,19 +279,18 @@ popd
 install -D -m 644 %{SOURCE2} %{buildroot}%{_docdir}/%{name}/README.mga
 install -D -m 644 %{SOURCE9} %{buildroot}%{_docdir}/%{name}/openmp.pbs
 
+%if %{with gui}
 #make symbolic links for tcl
 pushd %{buildroot}%{_libdir}
 %__ln_s %{tcl_sitelib}/xpbs    .
 %__ln_s %{tcl_sitelib}/xpbsmon .
 popd
+%endif
 
 
 #clean make install bugs the dirty way...
 %__rm -f %{buildroot}%{_mandir}/man1/basl2c.1*
 #__rm -f #{buildroot}#{_mandir}/man3/_*src_drmaa_src_.3*
-
-
-
 
 %post
 #update of /etc/services if needed
@@ -482,14 +476,14 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 
 
 
-%if %{with gui}
 %files -n %{guiname}
+%{_bindir}/pbs_tclsh
+%if %{with gui}
 %{_bindir}/xpbs*
 %{_bindir}/pbs_wish
-%{_bindir}/pbs_tclsh
 %{tcl_sitelib}/xpbs
 %{tcl_sitelib}/xpbsmon
 %{_libdir}/xpbs
 %{_libdir}/xpbsmon
-%{_mandir}/man1/xpbs*.1*
 %endif
+%{_mandir}/man1/xpbs*.1*
