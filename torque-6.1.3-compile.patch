@@ -1,0 +1,144 @@
+diff -up torque-6.1.3.h5/src/server/job_container.c.omv~ torque-6.1.3.h5/src/server/job_container.c
+--- torque-6.1.3.h5/src/server/job_container.c.omv~	2022-01-12 02:19:27.398330032 +0100
++++ torque-6.1.3.h5/src/server/job_container.c	2022-01-12 02:20:30.556557578 +0100
+@@ -508,7 +508,7 @@ int insert_job(
+ 
+   aj->lock();
+ 
+-  if (!aj->insert(pjob,pjob->ji_qs.ji_jobid, job_mutex))
++  if (!aj->insert(pjob,pjob->ji_qs.ji_jobid, job_mutex.get()))
+     {
+     rc = ENOMEM;
+     log_err(rc, __func__, "No memory to resize the array...SYSTEM FAILURE\n");
+diff -up torque-6.1.3.h5/src/include/attribute.h.omv~ torque-6.1.3.h5/src/include/attribute.h
+--- torque-6.1.3.h5/src/include/attribute.h.omv~	2022-01-12 02:57:30.526447870 +0100
++++ torque-6.1.3.h5/src/include/attribute.h	2022-01-12 02:57:36.601479206 +0100
+@@ -519,7 +519,7 @@ int to_size(const char *val, struct size
+ void from_size(struct size_value *psize, char *cvnbuf);
+ void create_size_string(char *buf, struct size_value values);
+ 
+-#define NULL_FUNC '\0'
++#define NULL_FUNC NULL
+ 
+ /* other associated funtions */
+ 
+diff -up torque-6.1.3.h5/src/include/tcp.h.omv~ torque-6.1.3.h5/src/include/tcp.h
+--- torque-6.1.3.h5/src/include/tcp.h.omv~	2022-01-12 02:48:19.002195052 +0100
++++ torque-6.1.3.h5/src/include/tcp.h	2022-01-12 02:48:32.947248587 +0100
+@@ -38,6 +38,12 @@ int tcp_wcommit(struct tcp_chan *chan, i
+ int tcp_rskip(struct tcp_chan *chan,size_t);
+ int tcp_chan_has_data(struct tcp_chan *chan);
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
+ extern time_t pbs_tcp_timeout;
++#ifdef __cplusplus
++}
++#endif
+ 
+ #endif /* TCP_PBS_H */
+diff -up torque-6.1.3.h5/src/server/job_attr_def.c.omv~ torque-6.1.3.h5/src/server/job_attr_def.c
+diff -up torque-6.1.3.h5/src/server/Makefile.am.omv~ torque-6.1.3.h5/src/server/Makefile.am
+--- torque-6.1.3.h5/src/server/Makefile.am.omv~	2022-01-12 03:03:09.059089583 +0100
++++ torque-6.1.3.h5/src/server/Makefile.am	2022-01-12 03:03:24.170158904 +0100
+@@ -24,7 +24,7 @@ PBS_LIBS = ../lib/Libattr/libattr.a \
+ 
+ sbin_PROGRAMS = pbs_server
+ 
+-pbs_server_LDADD = $(PBS_LIBS) $(ALPS_LIBS)
++pbs_server_LDADD = $(PBS_LIBS) $(ALPS_LIBS) -lxml2
+ AM_CFLAGS = -DPBS_SERVER_HOME=\"$(PBS_SERVER_HOME)\" -DPBS_ENVIRON=\"$(PBS_ENVIRON)\" `xml2-config --cflags`
+ AM_LIBS   =`xml2-config --libs`
+ 
+diff -up torque-6.1.3.h5/src/server/node_manager.c.omv~ torque-6.1.3.h5/src/server/node_manager.c
+--- torque-6.1.3.h5/src/server/node_manager.c.omv~	2022-01-12 02:58:31.630759352 +0100
++++ torque-6.1.3.h5/src/server/node_manager.c	2022-01-12 02:58:46.386833396 +0100
+@@ -960,7 +960,7 @@ void process_legacy_job_attribute_inform
+       char *attr_name = threadsafe_tokenizer(&attr_val, "=");
+ 
+       if ((attr_name != NULL) &&
+-          (attr_val != '\0'))
++          (attr_val != NULL) && *attr_val)
+         {
+         if (str_to_attr(attr_name, attr_val, pjob->ji_wattr, job_attr_def, JOB_ATR_LAST) == ATTR_NOT_FOUND)
+           {
+diff -up torque-6.1.3.h5/src/server/req_quejob.c.omv~ torque-6.1.3.h5/src/server/req_quejob.c
+--- torque-6.1.3.h5/src/server/req_quejob.c.omv~	2022-01-12 03:00:45.729417409 +0100
++++ torque-6.1.3.h5/src/server/req_quejob.c	2022-01-12 03:00:55.738465298 +0100
+@@ -327,7 +327,7 @@ void sum_select_mem_request(
+       tmp = atoi(current);
+       
+       /* advance past the digits to the units */
+-      while ((current != '\0') &&
++      while ((*current != '\0') &&
+              (isdigit(*current)))
+         current++;
+ 
+diff -up torque-6.1.3.h5/src/resmom/Makefile.am.omv~ torque-6.1.3.h5/src/resmom/Makefile.am
+--- torque-6.1.3.h5/src/resmom/Makefile.am.omv~	2022-01-12 03:14:33.814050604 +0100
++++ torque-6.1.3.h5/src/resmom/Makefile.am	2022-01-12 03:14:42.828087992 +0100
+@@ -34,7 +34,7 @@ PBS_LIBS = ../lib/Libattr/libattr.a \
+ EXTRA_DIST = rm_dep.h
+ sbin_PROGRAMS = pbs_mom pbs_demux
+ 
+-LDADD = @PBS_MACH@/libmommach.a $(MOMLIBS) $(PBS_LIBS) $(ALPS_LIBS) $(HWLOC_LIBS)
++LDADD = @PBS_MACH@/libmommach.a $(MOMLIBS) $(PBS_LIBS) $(ALPS_LIBS) $(HWLOC_LIBS) -lxml2
+ 
+ pbs_mom_SOURCES = catch_child.c mom_comm.c mom_inter.c mom_main.c	\
+ 		   mom_server.c prolog.c requests.c start_exec.c	\
+diff -up torque-6.1.3.h5/src/resmom/mom_main.c.omv~ torque-6.1.3.h5/src/resmom/mom_main.c
+--- torque-6.1.3.h5/src/resmom/mom_main.c.omv~	2022-01-12 03:12:15.541473645 +0100
++++ torque-6.1.3.h5/src/resmom/mom_main.c	2022-01-12 03:12:29.528532329 +0100
+@@ -1067,7 +1067,7 @@ char *conf_res(
+     goto done;
+     }
+ 
+-  name[i] = '\0';
++  name[i] = NULL;
+ 
+   for (d = ret_string, resline++;*resline;)
+     {
+diff -up torque-6.1.3.h5/src/resmom/parse_config.c.omv~ torque-6.1.3.h5/src/resmom/parse_config.c
+--- torque-6.1.3.h5/src/resmom/parse_config.c.omv~	2022-01-12 03:12:58.951655525 +0100
++++ torque-6.1.3.h5/src/resmom/parse_config.c	2022-01-12 03:13:11.068706165 +0100
+@@ -2385,14 +2385,14 @@ void reset_config_vars()
+   mom_host[0] = '\0';
+   hostname_specified = 0;
+   MOMConfigRReconfig = 0;
+-  TNoSpoolDirList[0] = '\0';
++  TNoSpoolDirList[0] = NULL;
+   is_reporter_mom = FALSE;
+   is_login_node = FALSE;
+   job_exit_wait_time = DEFAULT_JOB_EXIT_WAIT_TIME;
+   jobstarter_exe_name[0] = '\0';
+   jobstarter_set = 0;
+   server_alias = NULL;
+-  TRemChkptDirList[0] = '\0';
++  TRemChkptDirList[0] = NULL;
+   tmpdir_basename[0] = '\0';  /* for $TMPDIR */
+   rcp_path[0] = '\0';
+   rcp_args[0] = '\0';
+diff -up torque-6.1.3.h5/src/tools/Makefile.am.omv~ torque-6.1.3.h5/src/tools/Makefile.am
+--- torque-6.1.3.h5/src/tools/Makefile.am.omv~	2022-01-12 03:34:15.601839355 +0100
++++ torque-6.1.3.h5/src/tools/Makefile.am	2022-01-12 03:34:31.737903991 +0100
+@@ -38,6 +38,7 @@ printjob_SOURCES = printjob.c
+ printtracking_SOURCES = printtracking.c
+ printserverdb_SOURCES = printserverdb.c
+ tracejob_SOURCES = tracejob.c
++tracejob_LDADD = -lz
+ 
+ pbs_tclsh_LDADD = $(PBS_LIBS) $(MY_TCL_LIBS)
+ pbs_tclsh_CFLAGS = $(MY_TCL_INCS)
+diff -up torque-6.1.3.h5/src/drmaa/src/util.c.omv~ torque-6.1.3.h5/src/drmaa/src/util.c
+--- torque-6.1.3.h5/src/drmaa/src/util.c.omv~	2022-01-12 03:49:59.099610855 +0100
++++ torque-6.1.3.h5/src/drmaa/src/util.c	2022-01-12 03:50:06.720641283 +0100
+@@ -238,7 +238,7 @@ drmaa_get_DRMAA_implementation(
+ )
+   {
+   strlcpy(
+-    drmaa_impl, PACKAGE_NAME" v. "PACKAGE_VERSION" (by DSP Team)",
++    drmaa_impl, PACKAGE_NAME " v. " PACKAGE_VERSION " (by DSP Team)",
+     drmaa_impl_len);
+   return DRMAA_ERRNO_SUCCESS;
+   }

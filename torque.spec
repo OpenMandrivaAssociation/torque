@@ -20,22 +20,20 @@
 Name:           torque
 Summary:        The Torque resource and queue manager
 Group:          System/Cluster
-Version:        6.1.2
-Release:        10
+Version:        6.1.3.h5
+Release:        1
 License:        TORQUEv1.1
 URL:            http://www.adaptivecomputing.com/products/open-source/torque/
 
-Source0:        %{name}-%{srcversion}.tar.gz
+Source0:        https://github.com/adaptivecomputing/torque/archive/refs/heads/%{version}.tar.gz
 Source1:        mom_config
 Source2:        README.omv
-Source3:        pbs_mom.service
-Source4:        pbs_sched.service
-Source5:        pbs_server.service
-Source6:        trqauthd.service
 Source7:        torque_addport
 Source8:        torque_createdb
 Source9:        openmp.pbs
-Patch1:         torque-6.1.1.1-gcc7.patch
+
+Patch0:		torque-6.1.3-skip-broken-pthreads-check.patch
+Patch1:		torque-6.1.3-compile.patch
 
 BuildRequires:  bison
 BuildRequires:  flex
@@ -173,16 +171,12 @@ Obsoletes:      torque-xpbs <= 2.5.3
 %{summary}.
 
 %prep
-%setup -q -n %{name}-%{srcversion}
-%autopatch -p1
+%autosetup -p1 -n %{name}-%{srcversion}
 
 %build
 autoreconf -fi
 # -fpermissive added to downgrade numerous 'invalid conversion' errors to warnings
 export CPPFLAGS="-DUSE_INTERP_RESULT -DUSE_INTERP_ERRORLINE -DHAVE_STDBOOL_H -fpermissive"
-export CC=gcc
-export CXX=g++
-
 %configure \
                 --srcdir=%{_builddir}/%{name}-%{srcversion} \
                 --includedir=%{_includedir}/%{name} \
@@ -222,12 +216,10 @@ find %{buildroot}%{_libdir} -name *.la -delete
 #yields various service to fail if relative symlinks
 export DONT_RELINK=1
 
-#install starting scripts
-%__mkdir_p %{buildroot}%{_unitdir}
-install -p -m 644 %{SOURCE3} %{buildroot}%{_unitdir}/pbs_mom.service
-install -p -m 644 %{SOURCE4} %{buildroot}%{_unitdir}/pbs_sched.service
-install -p -m 644 %{SOURCE5} %{buildroot}%{_unitdir}/pbs_server.service
-install -p -m 644 %{SOURCE6} %{buildroot}%{_unitdir}/trqauthd.service
+#put starting scripts where systemd can see them
+mkdir -p %{buildroot}/lib
+mv %{buildroot}/usr/lib/systemd %{buildroot}/lib
+install -p -m 644 contrib/systemd/pbs_sched.service %{buildroot}%{_unitdir}/
 
 %__rm -f %{buildroot}%{_sysconfdir}/init.d/pbs_mom
 %__rm -f %{buildroot}%{_sysconfdir}/init.d/pbs_server
@@ -326,8 +318,6 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %preun -n %{clientname}
 %_preun_service trqauthd
 
-
-
 %files
 %doc PBS_License.txt Release_Notes README.torque
 %doc README.NUMA README.trqauthd README.array_changes
@@ -348,13 +338,9 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_libdir}/security/pam*
 %{_mandir}/man1/pbs.1.*
 
-
-
 %files -n %{libname}
 %doc CHANGELOG README.coding_notes README.building_40 README.configure
 %{_libdir}/*.so.*
-
-
 
 %files -n %{devname}
 %doc 
@@ -368,8 +354,6 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_mandir}/man3/tm.3*
 #{_mandir}/man3/drmaa.3*
 #{_mandir}/man3/drmaa_*.3*
-
-
 
 %files -n %{clientname}
 %doc
@@ -408,8 +392,6 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_mandir}/man8/pbsnodes.8*
 %{_mandir}/man8/q*.8*
 
-
-
 %files -n %{servername}
 %dir %{torquedir}/server_priv
 %dir %{torquedir}/server_priv/acl_svr
@@ -436,9 +418,6 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_bindir}/printtracking
 %{_mandir}/man8/pbs_server.8*
 
-
-
-
 %files -n %{schedname}
 %dir %{torquedir}/sched_priv
 %dir %{torquedir}/sched_priv/accounting
@@ -456,11 +435,7 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_sbindir}/qschedd
 %{_mandir}/man8/pbs_sched*.8*
 
-
-
-
 %files -n %{momname}
-%doc
 %dir %{torquedir}/mom_priv
 %dir %{torquedir}/mom_priv/jobs
 %dir %{torquedir}/mom_logs
@@ -472,9 +447,6 @@ sed -i 's|MYSERVERNAME|'"$HOSTNAME"'|g' %{torquedir}/server_priv/serverdb
 %{_sbindir}/momctl
 %{_sbindir}/pbs_demux
 %{_mandir}/man8/pbs_mom.8*
-
-
-
 
 %files -n %{guiname}
 %{_bindir}/pbs_tclsh
