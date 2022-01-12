@@ -61,6 +61,8 @@ BuildRequires:  pkgconfig(hwloc)
 BuildRequires:  boost-devel
 BuildRequires:  glibc-static-devel
 BuildRequires:  glibc-devel
+BuildRequires:	pkgconfig(systemd)
+BuildRequires:	pkgconfig(libsystemd)
 
 Requires:       openssh-clients
 Recommends:     torque-mom
