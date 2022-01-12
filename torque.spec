@@ -176,6 +176,9 @@ Obsoletes:      torque-xpbs <= 2.5.3
 
 %prep
 %autosetup -p1 -n %{name}-%{srcversion}
+# fix checks for systemd in Makefile.am files that
+# don't work inside containerized builders
+find . -name Makefile.am |xargs sed -i -e 's,if systemctl.*,if true; then \\,'
 
 %build
 autoreconf -fi
