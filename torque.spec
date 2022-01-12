@@ -63,6 +63,8 @@ BuildRequires:  glibc-static-devel
 BuildRequires:  glibc-devel
 BuildRequires:	pkgconfig(systemd)
 BuildRequires:	pkgconfig(libsystemd)
+# Just so configure knows we're using it
+BuildRequires:	systemd
 
 Requires:       openssh-clients
 Recommends:     torque-mom
