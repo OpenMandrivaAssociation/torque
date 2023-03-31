@@ -20,7 +20,7 @@ Summary:	The Torque resource and queue manager
 Name:		torque
 Group:		System/Cluster
 Version:	6.1.3.h5
-Release:	2
+Release:	3
 License:	TORQUEv1.1
 URL:		http://www.adaptivecomputing.com/products/open-source/torque/
 Source0:	https://github.com/adaptivecomputing/torque/archive/refs/heads/%{version}.tar.gz
