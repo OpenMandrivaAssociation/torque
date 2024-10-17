@@ -22,7 +22,7 @@ Group:		System/Cluster
 Version:	6.1.3.h5
 Release:	3
 License:	TORQUEv1.1
-URL:		http://www.adaptivecomputing.com/products/open-source/torque/
+URL:		https://www.adaptivecomputing.com/products/open-source/torque/
 Source0:	https://github.com/adaptivecomputing/torque/archive/refs/heads/%{version}.tar.gz
 Source1:	mom_config
 Source2:	README.omv
