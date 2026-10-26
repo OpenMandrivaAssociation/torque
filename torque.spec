@@ -170,6 +170,8 @@ Obsoletes:	torque-xpbs <= 2.5.3
 find . -name Makefile.am |xargs sed -i -e 's,if systemctl.*,if true; then \\,'
 # libxml2 2.12 returns a const xmlError. These files store it in xmlErrorPtr.
 sed -i 's/xmlGetLastError()/(xmlErrorPtr)xmlGetLastError()/g' $(grep -rl xmlGetLastError --include='*.c' --include='*.h' --include='*.cpp' --include='*.hpp' .)
+# The PAM module calls libxml2 directly. slibtool does not pull it in.
+sed -i 's/pam_pbssimpleauth_la_LIBADD = -lpam/pam_pbssimpleauth_la_LIBADD = -lpam -lxml2/' src/pam/Makefile.am
 
 %build
 autoreconf -fi
