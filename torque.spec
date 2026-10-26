@@ -1,4 +1,5 @@
 %define _disable_ld_no_undefined   1
+%global optflags %{optflags} -Wno-register
 
 %define major 2
 %define libname %mklibname %{name} %{major}
