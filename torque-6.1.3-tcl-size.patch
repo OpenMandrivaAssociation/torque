@@ -1,0 +1,32 @@
+--- a/src/scheduler.tcl/pbs_tclWrap.c
++++ b/src/scheduler.tcl/pbs_tclWrap.c
+@@ -1214,7 +1214,8 @@
+   
+   {
+   char *msg;
+-  int i, num, tre, ret;
++  int i, ret;
++  Tcl_Size num, tre;
+   Tcl_Obj **listp, **indp;
+   int   local_errno = 0;
+ 
+@@ -1301,7 +1302,8 @@
+   
+   {
+   char *msg;
+-  int i, num, ret;
++  int i, ret;
++  Tcl_Size num;
+   Tcl_Obj **listp, *fourl[4], *retl;
+   char *cmd;
+   char **res_array;
+@@ -1379,7 +1381,8 @@
+ 
+   {
+   char *msg;
+-  int i, num, ret;
++  int i, ret;
++  Tcl_Size num;
+   Tcl_Obj **listp;
+   char *cmd;
+   char **res_array;

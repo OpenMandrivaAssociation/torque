@@ -32,6 +32,7 @@ Source8:	torque_createdb
 Source9:	openmp.pbs
 Patch0:		torque-6.1.3-skip-broken-pthreads-check.patch
 Patch1:		torque-6.1.3-compile.patch
+Patch2:		torque-6.1.3-tcl-size.patch
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libtool-base
