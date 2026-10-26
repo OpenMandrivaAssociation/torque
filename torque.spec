@@ -167,6 +167,8 @@ Obsoletes:	torque-xpbs <= 2.5.3
 # fix checks for systemd in Makefile.am files that
 # don't work inside containerized builders
 find . -name Makefile.am |xargs sed -i -e 's,if systemctl.*,if true; then \\,'
+# libxml2 2.12 returns a const xmlError. These files store it in xmlErrorPtr.
+sed -i 's/xmlGetLastError()/(xmlErrorPtr)xmlGetLastError()/g' $(grep -rl xmlGetLastError --include='*.c' --include='*.h' --include='*.cpp' --include='*.hpp' .)
 
 %build
 autoreconf -fi
