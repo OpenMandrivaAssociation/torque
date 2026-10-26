@@ -173,7 +173,8 @@ sed -i 's/xmlGetLastError()/(xmlErrorPtr)xmlGetLastError()/g' $(grep -rl xmlGetL
 %build
 autoreconf -fi
 # -fpermissive added to downgrade numerous 'invalid conversion' errors to warnings
-export CPPFLAGS="-DUSE_INTERP_RESULT -DUSE_INTERP_ERRORLINE -DHAVE_STDBOOL_H -fpermissive"
+# Tcl dropped the CONST macro. This file is compiled as C++ (CC=$CXX).
+export CPPFLAGS="-DUSE_INTERP_RESULT -DUSE_INTERP_ERRORLINE -DHAVE_STDBOOL_H -DCONST=const -fpermissive"
 %configure \
 	--srcdir=%{_builddir}/%{name}-%{srcversion} \
 	--includedir=%{_includedir}/%{name} \
